@@ -99,7 +99,7 @@
 
         .login-head {
             background: linear-gradient(135deg, var(--forest), #123f22);
-            padding: 34px 30px 26px;
+            padding: 30px 30px 22px;
             text-align: center;
             color: #fff;
             position: relative;
@@ -118,15 +118,15 @@
         }
 
         .login-seal {
-            width: 52px;
-            height: 52px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             background: var(--gold);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
-            margin: 0 auto 14px;
+            font-size: 23px;
+            margin: 0 auto 12px;
             box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
         }
 
@@ -140,16 +140,20 @@
         .login-sub {
             font-size: 12px;
             opacity: 0.75;
-            margin-top: 5px;
+            margin-top: 4px;
             letter-spacing: 0.3px;
         }
 
         .login-body {
-            padding: 28px 30px 30px;
+            padding: 24px 28px 26px;
         }
 
         .lf-group {
-            margin-bottom: 16px;
+            margin-bottom: 14px;
+        }
+
+        .lf-group:last-of-type {
+            margin-bottom: 0;
         }
 
         .lf-label {
@@ -158,7 +162,7 @@
             color: var(--ink2);
             text-transform: uppercase;
             letter-spacing: 0.6px;
-            margin-bottom: 6px;
+            margin-bottom: 5px;
             display: block;
         }
 
@@ -182,17 +186,20 @@
 
         .lf-btn {
             width: 100%;
-            margin-top: 6px;
+            margin-top: 16px;
             padding: 12px;
             background: var(--forest);
             color: #fff;
             border: none;
             border-radius: 9px;
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 700;
             letter-spacing: 0.2px;
             cursor: pointer;
             transition: all .2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .lf-btn:hover {
@@ -206,7 +213,7 @@
             font-size: 11px;
             color: var(--ink3);
             margin-top: 14px;
-            line-height: 1.6;
+            line-height: 1.55;
         }
 
         .lf-error {
@@ -222,6 +229,72 @@
 
         .lf-error.show {
             display: block;
+        }
+
+        /* ── ICON BUTTONS ── */
+        .icon-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            line-height: 1;
+            transition: all .15s;
+            flex-shrink: 0;
+        }
+
+        .icon-btn+.icon-btn {
+            margin-left: 6px;
+        }
+
+        .icon-btn.primary {
+            background: var(--forest);
+            color: #fff;
+        }
+
+        .icon-btn.primary:hover {
+            background: var(--forest2);
+            transform: translateY(-1px);
+        }
+
+        .icon-btn.outline {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            color: var(--ink2);
+        }
+
+        .icon-btn.outline:hover {
+            background: var(--surface2);
+            color: var(--ink);
+        }
+
+        .icon-btn.danger {
+            background: var(--high-dim);
+            color: var(--high);
+        }
+
+        .icon-btn.danger:hover {
+            background: var(--high);
+            color: #fff;
+        }
+
+        .icon-btn.success {
+            background: var(--vlow);
+            color: #fff;
+        }
+
+        .icon-btn.success:hover {
+            filter: brightness(1.08);
+        }
+
+        .icon-btn:disabled {
+            opacity: .45;
+            cursor: not-allowed;
+            transform: none;
         }
 
         /* ── APP SHELL ── */
@@ -247,7 +320,7 @@
         }
 
         .sb-head {
-            padding: 22px 20px 18px;
+            padding: 20px 20px 16px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             gap: 11px;
@@ -282,7 +355,7 @@
 
         .sb-nav {
             flex: 1;
-            padding: 14px 12px;
+            padding: 10px 12px;
             display: flex;
             flex-direction: column;
             gap: 2px;
@@ -292,8 +365,8 @@
         .sb-link {
             display: flex;
             align-items: center;
-            gap: 11px;
-            padding: 10px 13px;
+            justify-content: center;
+            padding: 11px 13px;
             border-radius: 9px;
             border: none;
             background: none;
@@ -302,7 +375,6 @@
             font-weight: 500;
             cursor: pointer;
             width: 100%;
-            text-align: left;
             transition: all .15s;
         }
 
@@ -318,18 +390,18 @@
         }
 
         .sb-icon {
-            font-size: 15px;
-            width: 18px;
+            font-size: 19px;
+            width: 20px;
             text-align: center;
             flex-shrink: 0;
         }
 
         .sb-foot {
-            padding: 16px 20px;
+            padding: 12px 20px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             font-size: 10.5px;
             color: rgba(234, 241, 234, 0.55);
-            line-height: 1.6;
+            line-height: 1.5;
         }
 
         .sb-user {
@@ -380,7 +452,7 @@
         .topbar {
             background: var(--surface);
             border-bottom: 1px solid var(--border);
-            padding: 16px 26px;
+            padding: 14px 26px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -396,7 +468,7 @@
         .topbar-sub {
             font-size: 12px;
             color: var(--ink3);
-            margin-top: 2px;
+            margin-top: 1px;
         }
 
         .topbar-right {
@@ -440,7 +512,7 @@
             display: none;
             flex: 1;
             overflow-y: auto;
-            padding: 24px 26px 40px;
+            padding: 20px 26px 24px;
             animation: fadeUp .25s ease;
         }
 
@@ -464,13 +536,13 @@
         .stat-row {
             display: grid;
             grid-template-columns: repeat(4, 1fr) 1.3fr;
-            gap: 14px;
-            margin-bottom: 20px;
+            gap: 12px;
+            margin-bottom: 16px;
         }
 
         .stat-card {
             border-radius: var(--radius-sm);
-            padding: 16px 18px;
+            padding: 15px 17px;
             color: #fff;
             box-shadow: var(--shadow);
             position: relative;
@@ -514,15 +586,15 @@
 
         .stat-num {
             font-family: 'Spectral', serif;
-            font-size: 32px;
+            font-size: 30px;
             font-weight: 700;
-            margin-top: 6px;
+            margin-top: 4px;
         }
 
         .stat-foot {
             font-size: 10.5px;
             opacity: 0.8;
-            margin-top: 3px;
+            margin-top: 2px;
         }
 
         .gauge-card {
@@ -530,10 +602,10 @@
             border: 1px solid var(--border);
             border-radius: var(--radius-sm);
             box-shadow: var(--shadow);
-            padding: 14px 18px;
+            padding: 13px 17px;
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 13px;
         }
 
         .gauge-info-label {
@@ -555,13 +627,13 @@
             font-size: 22px;
             font-weight: 700;
             color: var(--forest);
-            margin-top: 2px;
+            margin-top: 1px;
         }
 
         .dash-grid {
             display: grid;
             grid-template-columns: 1.5fr 1fr;
-            gap: 16px;
+            gap: 14px;
         }
 
         .panel-box {
@@ -572,12 +644,17 @@
             overflow: hidden;
         }
 
+        .panel-box+.panel-box {
+            margin-top: 14px;
+        }
+
         .panel-box-head {
-            padding: 14px 18px;
+            padding: 13px 18px;
             border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 10px;
         }
 
         .panel-box-title {
@@ -593,7 +670,7 @@
         }
 
         .panel-box-body {
-            padding: 16px 18px;
+            padding: 14px 18px;
         }
 
         #dash-map {
@@ -610,7 +687,7 @@
 
         .rank-table th {
             text-align: left;
-            padding: 8px 6px;
+            padding: 7px 6px;
             font-size: 10px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -619,7 +696,7 @@
         }
 
         .rank-table td {
-            padding: 9px 6px;
+            padding: 8px 6px;
             border-bottom: 1px solid var(--surface2);
         }
 
@@ -671,13 +748,18 @@
         .update-item {
             display: flex;
             gap: 10px;
-            padding: 10px 0;
+            padding: 9px 0;
             border-bottom: 1px solid var(--surface2);
             font-size: 12px;
         }
 
         .update-item:last-child {
             border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .update-item:first-child {
+            padding-top: 0;
         }
 
         .update-dot {
@@ -704,6 +786,7 @@
             padding: 0;
             display: flex;
             flex-direction: column;
+            height: 100%;
         }
 
         .map-view-wrap {
@@ -725,7 +808,7 @@
             background: var(--surface);
             border-radius: var(--radius-sm);
             box-shadow: var(--shadow-lg);
-            padding: 14px 16px;
+            padding: 13px 15px;
             font-size: 12px;
             min-width: 180px;
         }
@@ -733,7 +816,7 @@
         .map-legend-title {
             font-weight: 700;
             font-size: 11.5px;
-            margin-bottom: 8px;
+            margin-bottom: 7px;
             color: var(--ink);
         }
 
@@ -757,7 +840,7 @@
             display: flex;
             gap: 10px;
             align-items: center;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             flex-wrap: wrap;
         }
 
@@ -793,6 +876,10 @@
             overflow: hidden;
         }
 
+        .data-table-wrap+.data-table-wrap {
+            margin-top: 14px;
+        }
+
         .data-table {
             width: 100%;
             border-collapse: collapse;
@@ -803,7 +890,7 @@
             background: var(--forest);
             color: #fff;
             text-align: left;
-            padding: 12px 16px;
+            padding: 11px 16px;
             font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -811,7 +898,7 @@
         }
 
         .data-table td {
-            padding: 12px 16px;
+            padding: 11px 16px;
             border-bottom: 1px solid var(--surface2);
         }
 
@@ -839,6 +926,46 @@
             border-radius: 99px;
         }
 
+        .muted-cell {
+            color: var(--ink3);
+        }
+
+        .pd-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            align-items: start;
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+        }
+
+        @media(max-width:1100px) {
+            .pd-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ── ADD-RECORD FORM ── */
+        .record-form {
+            padding: 15px 18px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface2);
+        }
+
+        .record-form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .record-form-actions {
+            display: flex;
+            align-items: center;
+        }
+
         /* ── REPORTS ── */
         .report-cards {
             display: grid;
@@ -864,7 +991,7 @@
 
         .rep-icon {
             font-size: 22px;
-            margin-bottom: 10px;
+            margin-bottom: 9px;
         }
 
         .rep-title {
@@ -885,9 +1012,9 @@
             border: 1px solid var(--border);
             border-radius: var(--radius);
             box-shadow: var(--shadow);
-            padding: 22px;
+            padding: 20px;
             max-width: 520px;
-            margin-bottom: 18px;
+            margin-bottom: 14px;
         }
 
         .acc-restricted-note {
@@ -897,21 +1024,12 @@
             padding: 12px 16px;
             font-size: 12.5px;
             color: var(--ink2);
-            line-height: 1.6;
-            margin-bottom: 16px;
+            line-height: 1.55;
+            margin-bottom: 14px;
         }
 
         .acc-restricted-note strong {
             color: var(--gold);
-        }
-
-        .row-btn {
-            padding: 5px 10px;
-            font-size: 11px;
-        }
-
-        .row-btn+.row-btn {
-            margin-left: 6px;
         }
 
         /* ── SETTINGS ── */
@@ -920,7 +1038,7 @@
             border: 1px solid var(--border);
             border-radius: var(--radius);
             box-shadow: var(--shadow);
-            padding: 22px;
+            padding: 20px;
             max-width: 480px;
         }
 
@@ -928,12 +1046,17 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 13px 0;
+            padding: 12px 0;
             border-bottom: 1px solid var(--surface2);
         }
 
         .settings-row:last-child {
             border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .settings-row:first-child {
+            padding-top: 0;
         }
 
         .settings-label {
@@ -974,38 +1097,6 @@
 
         .toggle.on .toggle-knob {
             left: 19px;
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            padding: 10px 16px;
-            border-radius: 9px;
-            font-size: 13px;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-            transition: all .18s;
-        }
-
-        .btn-primary {
-            background: var(--forest);
-            color: #fff;
-        }
-
-        .btn-primary:hover {
-            background: var(--forest2);
-        }
-
-        .btn-outline {
-            background: var(--surface);
-            color: var(--ink);
-            border: 1.5px solid var(--border);
-        }
-
-        .btn-outline:hover {
-            background: var(--surface2);
         }
 
         .toast-wrap {
@@ -1094,7 +1185,7 @@
             }
 
             .view {
-                padding: 16px;
+                padding: 14px;
             }
         }
     </style>
@@ -1141,20 +1232,20 @@
                 </div>
             </div>
             <nav class="sb-nav">
-                <button class="sb-link active" data-view="dashboard" onclick="showView('dashboard')"><span
-                        class="sb-icon">🏠</span>Dashboard</button>
-                <button class="sb-link" data-view="barangays" onclick="showView('barangays')"><span
-                        class="sb-icon">📍</span>Barangays</button>
-                <button class="sb-link" data-view="poverty-data" onclick="showView('poverty-data')"><span
-                        class="sb-icon">📊</span>Poverty Data</button>
-                <button class="sb-link" data-view="map-view" onclick="showView('map-view')"><span
-                        class="sb-icon">🗺️</span>Map View</button>
-                <button class="sb-link" data-view="reports" onclick="showView('reports')"><span
-                        class="sb-icon">📄</span>Reports</button>
-                <button class="sb-link" data-view="users" onclick="showView('users')"><span
-                        class="sb-icon">👥</span>Users</button>
-                <button class="sb-link" data-view="settings" onclick="showView('settings')"><span
-                        class="sb-icon">⚙️</span>Settings</button>
+                <button class="sb-link active" data-view="dashboard" onclick="showView('dashboard')"
+                    title="Dashboard" aria-label="Dashboard"><span class="sb-icon">🏠</span></button>
+                <button class="sb-link" data-view="barangays" onclick="showView('barangays')" title="Barangays"
+                    aria-label="Barangays"><span class="sb-icon">📍</span></button>
+                <button class="sb-link" data-view="poverty-data" onclick="showView('poverty-data')"
+                    title="Poverty Data" aria-label="Poverty Data"><span class="sb-icon">📊</span></button>
+                <button class="sb-link" data-view="map-view" onclick="showView('map-view')" title="Map View"
+                    aria-label="Map View"><span class="sb-icon">🗺️</span></button>
+                <button class="sb-link" data-view="reports" onclick="showView('reports')" title="Reports"
+                    aria-label="Reports"><span class="sb-icon">📄</span></button>
+                <button class="sb-link" data-view="users" onclick="showView('users')" title="Users"
+                    aria-label="Users"><span class="sb-icon">👥</span></button>
+                <button class="sb-link" data-view="settings" onclick="showView('settings')" title="Settings"
+                    aria-label="Settings"><span class="sb-icon">⚙️</span></button>
             </nav>
             <div class="sb-user">
                 <div class="sb-avatar">🧑‍💼</div>
@@ -1162,7 +1253,7 @@
                     <div class="sb-uname" id="sb-username">Admin</div>
                     <div class="sb-urole" id="sb-userrole">Administrator</div>
                 </div>
-                <button class="sb-logout" onclick="doLogout()" title="Log out">⏻</button>
+                <button class="sb-logout" onclick="doLogout()" title="Log out" aria-label="Log out">⏻</button>
             </div>
             <div class="sb-foot">Community-Based Poverty Mapping<br>with Smart Analytics · v1.0</div>
         </aside>
@@ -1227,7 +1318,7 @@
                         <div id="dash-map"></div>
                     </div>
 
-                    <div style="display:flex; flex-direction:column; gap:16px;">
+                    <div>
                         <div class="panel-box">
                             <div class="panel-box-head">
                                 <div class="panel-box-title" id="top5-title">Top 5 High Poverty Barangays</div>
@@ -1286,32 +1377,183 @@
 
             <!-- ── POVERTY DATA ── -->
             <div class="view" id="view-poverty-data">
-                <div
-                    style="background:var(--gold-dim); border:1px solid var(--gold); border-radius:var(--radius-sm); padding:12px 16px; font-size:12.5px; color:var(--ink2); line-height:1.6; margin-bottom:16px;">
-                    <strong style="color:var(--gold);">Classification basis:</strong> household poverty status is
-                    classified by the trained ML model using income, occupation, and educational attainment as primary
-                    indicators, with household size, housing condition, and access to basic services as contributing
-                    factors. Figures shown are illustrative for the <span id="pd-banner-count">5</span> tracked
-                    barangays.
-                </div>
-                <div class="data-toolbar">
-                    <input class="search-input" id="pd-search" placeholder="Search barangay..."
-                        oninput="renderPovertyData()">
-                </div>
-                <div class="data-table-wrap">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Barangay</th>
-                                <th>Income</th>
-                                <th>Occupation</th>
-                                <th>Educational Attainment</th>
-                                <th>Housing Condition</th>
-                                <th>Access to Basic Services</th>
-                            </tr>
-                        </thead>
-                        <tbody id="pd-table-body"></tbody>
-                    </table>
+                <div class="pd-grid">
+
+                    <!-- LEFT: Historical Trend Records -->
+                    <div class="panel-box">
+                        <div class="panel-box-head">
+                            <div>
+                                <div class="panel-box-title">Historical Trend Records</div>
+                                <div class="panel-box-sub">Poor household magnitude and proportion by year, per
+                                    barangay</div>
+                            </div>
+                            <button class="icon-btn primary" onclick="toggleRecordForm()" title="Add record"
+                                aria-label="Add record">➕</button>
+                        </div>
+
+                        <div class="record-form" id="record-form-card" style="display:none;">
+                            <div class="record-form-grid">
+                                <div>
+                                    <label class="lf-label">Barangay</label>
+                                    <select class="filter-select" id="rec-barangay" style="width:100%;"></select>
+                                </div>
+                                <div>
+                                    <label class="lf-label">Year</label>
+                                    <select class="filter-select" id="rec-year" style="width:100%;">
+                                        <option value="2019">2019</option>
+                                        <option value="2021">2021</option>
+                                        <option value="2023">2023</option>
+                                        <option value="2025" selected>2025</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="lf-label">No. of Households</label>
+                                    <input class="lf-input" type="number" min="0" id="rec-hh" placeholder="e.g. 300"
+                                        oninput="autoCalcProportion()">
+                                </div>
+                                <div>
+                                    <label class="lf-label">Poor HH Magnitude</label>
+                                    <input class="lf-input" type="number" min="0" id="rec-mag" placeholder="e.g. 250"
+                                        oninput="autoCalcProportion()">
+                                </div>
+                                <div>
+                                    <label class="lf-label">Poor HH Proportion (%)</label>
+                                    <input class="lf-input" type="number" min="0" max="100" step="0.01" id="rec-pct"
+                                        placeholder="Auto-calculated">
+                                </div>
+                            </div>
+                            <div class="record-form-actions">
+                                <button class="icon-btn primary" onclick="saveRecord()" title="Save record"
+                                    aria-label="Save record">💾</button>
+                                <button class="icon-btn outline" onclick="toggleRecordForm()" title="Cancel"
+                                    aria-label="Cancel">✖</button>
+                            </div>
+                        </div>
+
+                        <div class="panel-box-body table-scroll">
+                            <table class="data-table" style="box-shadow:none;">
+                                <thead>
+                                    <tr>
+                                        <th>Barangay</th>
+                                        <th>Year</th>
+                                        <th>No. of HH</th>
+                                        <th>Poor HH Mag.</th>
+                                        <th>Poor HH %</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="record-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT: Household Indicators -->
+                    <div class="panel-box">
+                        <div class="panel-box-head">
+                            <div>
+                                <div class="panel-box-title">Household Indicators</div>
+                                <div class="panel-box-sub">Income, occupation & education by barangay</div>
+                            </div>
+                            <button class="icon-btn primary" onclick="toggleBarangayForm()" title="Add barangay"
+                                aria-label="Add barangay">➕</button>
+                        </div>
+
+                        <div class="record-form" id="barangay-form-card" style="display:none;">
+                            <div class="record-form-grid">
+                                <div>
+                                    <label class="lf-label">Barangay Name</label>
+                                    <input class="lf-input" id="bg-name" placeholder="e.g. Alae">
+                                </div>
+                                <div>
+                                    <label class="lf-label">Poverty Level</label>
+                                    <select class="filter-select" id="bg-level" style="width:100%;">
+                                        <option value="High">High</option>
+                                        <option value="Moderate" selected>Moderate</option>
+                                        <option value="Low">Low</option>
+                                        <option value="Very Low">Very Low</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="lf-label">Poverty Incidence (%)</label>
+                                    <input class="lf-input" type="number" min="0" max="100" step="0.01" id="bg-pct"
+                                        placeholder="e.g. 24.50">
+                                </div>
+                                <div>
+                                    <label class="lf-label">Households Surveyed</label>
+                                    <input class="lf-input" type="number" min="0" id="bg-hh" placeholder="e.g. 400">
+                                </div>
+                                <div>
+                                    <label class="lf-label">Income</label>
+                                    <select class="filter-select" id="bg-income" style="width:100%;">
+                                        <option value="Low">Low</option>
+                                        <option value="Moderate">Moderate</option>
+                                        <option value="High">High</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="lf-label">Housing Condition</label>
+                                    <select class="filter-select" id="bg-housing" style="width:100%;">
+                                        <option value="Poor">Poor</option>
+                                        <option value="Fair">Fair</option>
+                                        <option value="Good">Good</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="lf-label">Access to Basic Services</label>
+                                    <select class="filter-select" id="bg-services" style="width:100%;">
+                                        <option value="Limited">Limited</option>
+                                        <option value="Moderate">Moderate</option>
+                                        <option value="Full">Full</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="lf-label">Latitude</label>
+                                    <input class="lf-input" type="number" step="0.0001" id="bg-lat"
+                                        placeholder="e.g. 8.3745">
+                                </div>
+                                <div>
+                                    <label class="lf-label">Longitude</label>
+                                    <input class="lf-input" type="number" step="0.0001" id="bg-lng"
+                                        placeholder="e.g. 124.8467">
+                                </div>
+                            </div>
+                            <div class="record-form-actions">
+                                <button class="icon-btn primary" onclick="saveBarangay()" title="Save barangay"
+                                    aria-label="Save barangay">💾</button>
+                                <button class="icon-btn outline" onclick="toggleBarangayForm()" title="Cancel"
+                                    aria-label="Cancel">✖</button>
+                            </div>
+                        </div>
+
+                        <div class="panel-box-body" style="padding-bottom:0;">
+                            <div
+                                style="background:var(--gold-dim); border:1px solid var(--gold); border-radius:var(--radius-sm); padding:10px 14px; font-size:11.5px; color:var(--ink2); line-height:1.5; margin-bottom:12px;">
+                                <strong style="color:var(--gold);">Classification basis:</strong> the ML model uses
+                                income, occupation, and educational attainment as primary indicators, plus household
+                                size, housing condition, and access to services. Figures shown are illustrative for
+                                the <span id="pd-banner-count">5</span> tracked barangays.
+                            </div>
+                            <input class="search-input" id="pd-search" placeholder="Search barangay..."
+                                oninput="renderPovertyData()" style="width:100%; margin-bottom:12px;">
+                        </div>
+
+                        <div class="table-scroll">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Barangay</th>
+                                        <th>Income</th>
+                                        <th>Occupation</th>
+                                        <th>Education</th>
+                                        <th>Housing</th>
+                                        <th>Services</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pd-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
@@ -1371,7 +1613,8 @@
 
                 <div id="acc-admin-tools" style="display:none;">
                     <div class="data-toolbar">
-                        <button class="btn btn-primary" onclick="toggleCreateAccountForm()">➕ Create Account</button>
+                        <button class="icon-btn primary" onclick="toggleCreateAccountForm()" title="Create account"
+                            aria-label="Create account">➕</button>
                     </div>
                     <div class="acc-card" id="create-account-card" style="display:none;">
                         <div class="lf-group">
@@ -1394,9 +1637,11 @@
                             <label class="lf-label">Assigned Barangay</label>
                             <input class="lf-input" id="new-acc-barangay" placeholder="e.g. Municipal-wide">
                         </div>
-                        <div style="display:flex; gap:10px;">
-                            <button class="btn btn-primary" onclick="createAccount()">Save Account</button>
-                            <button class="btn btn-outline" onclick="toggleCreateAccountForm()">Cancel</button>
+                        <div style="display:flex; align-items:center; margin-top:4px;">
+                            <button class="icon-btn primary" onclick="createAccount()" title="Save account"
+                                aria-label="Save account">💾</button>
+                            <button class="icon-btn outline" onclick="toggleCreateAccountForm()" title="Cancel"
+                                aria-label="Cancel">✖</button>
                         </div>
                     </div>
                 </div>
@@ -1447,10 +1692,11 @@
                             <div class="toggle-knob"></div>
                         </div>
                     </div>
-                    <div style="margin-top:18px; display:flex; gap:10px;">
-                        <button class="btn btn-primary" onclick="toast('Settings saved','success')">Save
-                            Changes</button>
-                        <button class="btn btn-outline" onclick="toast('Reverted to defaults')">Reset</button>
+                    <div style="margin-top:16px; display:flex; align-items:center;">
+                        <button class="icon-btn primary" onclick="toast('Settings saved','success')" title="Save changes"
+                            aria-label="Save changes">💾</button>
+                        <button class="icon-btn outline" onclick="toast('Reverted to defaults')" title="Reset"
+                            aria-label="Reset">↺</button>
                     </div>
                 </div>
             </div>
@@ -1463,13 +1709,23 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         // ── BARANGAY DATA ──
-        // Reduced to the 5 pilot barangays classified as High poverty.
+        // The 5 pilot barangays classified as High poverty, plus 5 more real
+        // Manolo Fortich barangays (Alae, Damilag, Tankulan, Dahilayan, Agusan
+        // Canyon) added to round out the map with Moderate/Low/Very Low examples.
+        // Names and coordinates are real; poverty %, households, and indicator
+        // fields for these five are ILLUSTRATIVE placeholders — replace them with
+        // your actual survey figures using the Add Barangay form once you have them.
         const BARANGAYS = [
             { name: "Guilang-guilang", level: "High", pct: 84.82, hh: 412, pilot: true, lat: 8.3745, lng: 124.8467, income: "Low", services: "Limited", housing: "Poor" },
             { name: "Santiago", level: "High", pct: 76.35, hh: 389, pilot: true, lat: 8.3512, lng: 124.8801, income: "Low", services: "Limited", housing: "Poor" },
             { name: "Ticala", level: "High", pct: 55.6, hh: 131, pilot: true, lat: 8.4034, lng: 124.8412, income: "Low", services: "Moderate", housing: "Fair" },
             { name: "Maluko", level: "High", pct: 53.75, hh: 165, pilot: true, lat: 8.3298, lng: 124.8489, income: "Low", services: "Limited", housing: "Poor" },
             { name: "Lunocan", level: "High", pct: 53.16, hh: 298, pilot: true, lat: 8.3901, lng: 124.8912, income: "Low", services: "Moderate", housing: "Fair" },
+            { name: "Alae", level: "Moderate", pct: 28.40, hh: 540, pilot: true, lat: 8.4178, lng: 124.8089, income: "Low", services: "Moderate", housing: "Fair" },
+            { name: "Dahilayan", level: "Moderate", pct: 24.15, hh: 210, pilot: true, lat: 8.2215, lng: 124.8490, income: "Low", services: "Moderate", housing: "Fair" },
+            { name: "Agusan Canyon", level: "Low", pct: 18.30, hh: 470, pilot: true, lat: 8.3263, lng: 124.8086, income: "Moderate", services: "Moderate", housing: "Fair" },
+            { name: "Damilag", level: "Low", pct: 15.20, hh: 610, pilot: true, lat: 8.3503, lng: 124.8121, income: "Moderate", services: "Full", housing: "Good" },
+            { name: "Tankulan", level: "Very Low", pct: 6.80, hh: 720, pilot: true, lat: 8.3688, lng: 124.8641, income: "Moderate", services: "Full", housing: "Good" },
         ];
 
         const LEVEL_COLOR = { High: '#a4322a', Moderate: '#c76b1f', Low: '#c9a227', 'Very Low': '#2f7d3c' };
@@ -1479,6 +1735,17 @@
             { text: 'New household survey submitted for Santiago', time: '5 hours ago' },
             { text: 'Quarterly Trends Report generated (Q3 2026)', time: '1 day ago' },
             { text: 'Barangay boundary layer synced', time: '2 days ago' },
+        ];
+
+        // ── HISTORICAL TREND RECORDS (Poverty Data → Add) ──
+        // Seeded with the one confirmed data point (Guilang-guilang, 2021); the
+        // other year/barangay cells are intentionally blank until filled in via
+        // the Add form, same as the source survey table.
+        let POVERTY_RECORDS = [
+            { barangay: "Guilang-guilang", year: 2019, hh: null, mag: null },
+            { barangay: "Guilang-guilang", year: 2021, hh: 303, mag: 257 },
+            { barangay: "Guilang-guilang", year: 2023, hh: null, mag: null },
+            { barangay: "Guilang-guilang", year: 2025, hh: null, mag: null },
         ];
 
         // ── ACCOUNTS (admin-managed, in-memory for this session) ──
@@ -1636,8 +1903,8 @@
       <td>${a.barangay || '—'}</td>
       <td><span class="lvl-pill ${a.status === 'Active' ? 'vlow' : 'high'}">${a.status || 'Active'}</span></td>
       <td>${admin ? `
-        <button class="btn btn-outline row-btn" onclick="toggleAccountStatus('${a.username}')">${a.status === 'Active' ? 'Suspend' : 'Activate'}</button>
-        <button class="btn btn-outline row-btn" style="color:var(--high);" onclick="deleteAccount('${a.username}')">Delete</button>
+        <button class="icon-btn outline" onclick="toggleAccountStatus('${a.username}')" title="${a.status === 'Active' ? 'Suspend account' : 'Activate account'}" aria-label="${a.status === 'Active' ? 'Suspend account' : 'Activate account'}">${a.status === 'Active' ? '⏸' : '▶'}</button>
+        <button class="icon-btn danger" onclick="deleteAccount('${a.username}')" title="Delete account" aria-label="Delete account">🗑</button>
       ` : '—'}</td>
     </tr>`).join('');
         }
@@ -1719,7 +1986,7 @@
     </tr>`).join('') || `<tr><td colspan="4" style="text-align:center;color:var(--ink3);padding:24px;">No barangays match your search.</td></tr>`;
         }
 
-        // ── POVERTY DATA TABLE ──
+        // ── POVERTY DATA (indicator breakdown) ──
         // Occupation / educational attainment classifications derived from ML-classified
         // poverty level, per the indicators the trained model is built on (income,
         // occupation, educational attainment — plus housing and access to services).
@@ -1737,6 +2004,129 @@
       <td>${b.housing}</td>
       <td>${b.services}</td>
     </tr>`).join('');
+        }
+
+        // ── ADD BARANGAY (Household Indicators → Add) ──
+        function toggleBarangayForm() {
+            const card = document.getElementById('barangay-form-card');
+            card.style.display = (card.style.display === 'none' || !card.style.display) ? 'block' : 'none';
+        }
+        function saveBarangay() {
+            const name = document.getElementById('bg-name').value.trim();
+            const level = document.getElementById('bg-level').value;
+            const pctVal = document.getElementById('bg-pct').value;
+            const hhVal = document.getElementById('bg-hh').value;
+            const income = document.getElementById('bg-income').value;
+            const housing = document.getElementById('bg-housing').value;
+            const services = document.getElementById('bg-services').value;
+            const latVal = document.getElementById('bg-lat').value;
+            const lngVal = document.getElementById('bg-lng').value;
+
+            if (!name) { toast('Please enter a barangay name.'); return; }
+            if (BARANGAYS.some(b => b.name.toLowerCase() === name.toLowerCase())) { toast('That barangay is already tracked.'); return; }
+            if (pctVal === '' || hhVal === '' || latVal === '' || lngVal === '') {
+                toast('Poverty incidence, households, and coordinates are required.');
+                return;
+            }
+
+            const entry = {
+                name, level,
+                pct: parseFloat(pctVal),
+                hh: parseInt(hhVal, 10),
+                pilot: true,
+                lat: parseFloat(latVal),
+                lng: parseFloat(lngVal),
+                income, housing, services
+            };
+            BARANGAYS.push(entry);
+
+            ['bg-name', 'bg-pct', 'bg-hh', 'bg-lat', 'bg-lng'].forEach(id => document.getElementById(id).value = '');
+            toggleBarangayForm();
+
+            renderStats();
+            renderTop5();
+            renderBarangays();
+            renderPovertyData();
+            addMarkerToMaps(entry);
+            toast('Barangay added.', 'success');
+        }
+        function addMarkerToMaps(b) {
+            [dashMap, fullMap].forEach(m => {
+                if (!m) return;
+                L.circleMarker([b.lat, b.lng], {
+                    radius: 9, color: '#fff', weight: 2, fillColor: LEVEL_COLOR[b.level], fillOpacity: 0.9
+                }).addTo(m).bindPopup(`<b>${b.name}</b><br>${b.level} poverty · ${b.pct}%${b.pilot ? '<br><em style="color:#1f6b34">Pilot barangay</em>' : ''}`);
+            });
+        }
+
+        // ── HISTORICAL TREND RECORDS (Add form) ──
+        function toggleRecordForm() {
+            const card = document.getElementById('record-form-card');
+            const opening = (card.style.display === 'none' || !card.style.display);
+            if (opening) populateRecordBarangayOptions();
+            card.style.display = opening ? 'block' : 'none';
+        }
+        function populateRecordBarangayOptions() {
+            const sel = document.getElementById('rec-barangay');
+            sel.innerHTML = BARANGAYS.map(b => `<option value="${b.name}">${b.name}</option>`).join('');
+        }
+        function autoCalcProportion() {
+            const hh = parseFloat(document.getElementById('rec-hh').value);
+            const mag = parseFloat(document.getElementById('rec-mag').value);
+            const pctField = document.getElementById('rec-pct');
+            if (hh > 0 && !isNaN(mag)) {
+                pctField.value = (mag / hh * 100).toFixed(2);
+            }
+        }
+        function saveRecord() {
+            const barangay = document.getElementById('rec-barangay').value;
+            const year = parseInt(document.getElementById('rec-year').value, 10);
+            const hhVal = document.getElementById('rec-hh').value;
+            const magVal = document.getElementById('rec-mag').value;
+
+            if (!barangay) { toast('Please select a barangay.'); return; }
+            if (hhVal === '' || magVal === '') { toast('Households and poor HH magnitude are required.'); return; }
+
+            const hh = parseFloat(hhVal), mag = parseFloat(magVal);
+            if (mag > hh) { toast('Magnitude cannot exceed number of households.'); return; }
+
+            const existing = POVERTY_RECORDS.find(r => r.barangay === barangay && r.year === year);
+            if (existing) {
+                existing.hh = hh; existing.mag = mag;
+            } else {
+                POVERTY_RECORDS.push({ barangay, year, hh, mag });
+            }
+
+            document.getElementById('rec-hh').value = '';
+            document.getElementById('rec-mag').value = '';
+            document.getElementById('rec-pct').value = '';
+            toggleRecordForm();
+            renderPovertyRecords();
+            toast('Record saved.', 'success');
+        }
+        function deleteRecord(idx) {
+            POVERTY_RECORDS.splice(idx, 1);
+            renderPovertyRecords();
+            toast('Record removed.', 'success');
+        }
+        function recordProportion(r) {
+            if (r.hh && r.mag !== null && r.mag !== undefined) return (r.mag / r.hh * 100);
+            return null;
+        }
+        function renderPovertyRecords() {
+            const sorted = [...POVERTY_RECORDS].sort((a, b) => a.barangay.localeCompare(b.barangay) || a.year - b.year);
+            document.getElementById('record-table-body').innerHTML = sorted.map(r => {
+                const pct = recordProportion(r);
+                const realIdx = POVERTY_RECORDS.indexOf(r);
+                return `<tr>
+      <td><strong>${r.barangay}</strong></td>
+      <td>${r.year}</td>
+      <td>${(r.hh ?? r.hh === 0) ? r.hh : '<span class="muted-cell">…</span>'}</td>
+      <td>${(r.mag ?? r.mag === 0) ? r.mag : '<span class="muted-cell">…</span>'}</td>
+      <td>${pct !== null ? pct.toFixed(2) + '%' : '<span class="muted-cell">…</span>'}</td>
+      <td><button class="icon-btn danger" onclick="deleteRecord(${realIdx})" title="Delete record" aria-label="Delete record">🗑</button></td>
+    </tr>`;
+            }).join('') || `<tr><td colspan="6" style="text-align:center;color:var(--ink3);padding:24px;">No records yet — use the add button above to enter historical data.</td></tr>`;
         }
 
         // ── MAPS ──
@@ -1775,6 +2165,7 @@
         renderUpdates();
         renderBarangays();
         renderPovertyData();
+        renderPovertyRecords();
         window.addEventListener('resize', () => { if (dashMap) dashMap.invalidateSize(); if (fullMap) fullMap.invalidateSize(); });
     </script>
 </body>
