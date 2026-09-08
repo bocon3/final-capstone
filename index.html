@@ -1,0 +1,1782 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ComBaTy — Community-Based Poverty Mapping with Regression Analysis| Manolo Fortich, Bukidnon</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        :root {
+            --forest: #0d3b1e;
+            --forest2: #1f6b34;
+            --forest-dim: rgba(31, 107, 52, 0.1);
+            --gold: #b9862f;
+            --gold-dim: rgba(185, 134, 47, 0.12);
+            --bg: #f5f4ee;
+            --surface: #ffffff;
+            --surface2: #eef0e7;
+            --border: #e0ddd0;
+            --ink: #16201a;
+            --ink2: #5c6a5e;
+            --ink3: #93a294;
+            --high: #a4322a;
+            --high-dim: rgba(164, 50, 42, 0.1);
+            --mod: #c76b1f;
+            --mod-dim: rgba(199, 107, 31, 0.1);
+            --low: #c9a227;
+            --low-dim: rgba(201, 162, 39, 0.12);
+            --vlow: #2f7d3c;
+            --vlow-dim: rgba(47, 125, 60, 0.1);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --shadow: 0 2px 14px rgba(13, 59, 30, 0.07);
+            --shadow-lg: 0 10px 36px rgba(13, 59, 30, 0.14);
+            --nav-w: 250px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+        }
+
+        .display {
+            font-family: 'Spectral', serif;
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ── LOGIN ── */
+        #login-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            background:
+                radial-gradient(circle at 18% 20%, rgba(255, 255, 255, 0.05), transparent 40%),
+                linear-gradient(160deg, #0a2412 0%, #0d3b1e 55%, #123f22 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 380px;
+            background: var(--surface);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+            animation: cardIn 0.5s cubic-bezier(.2, .8, .2, 1);
+        }
+
+        @keyframes cardIn {
+            from {
+                opacity: 0;
+                transform: translateY(18px) scale(0.98)
+            }
+
+            to {
+                opacity: 1;
+                transform: none
+            }
+        }
+
+        .login-head {
+            background: linear-gradient(135deg, var(--forest), #123f22);
+            padding: 34px 30px 26px;
+            text-align: center;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-head::after {
+            content: '';
+            position: absolute;
+            right: -40px;
+            top: -40px;
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .login-seal {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: var(--gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin: 0 auto 14px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+        }
+
+        .login-title {
+            font-family: 'Spectral', serif;
+            font-size: 21px;
+            font-weight: 700;
+            letter-spacing: -0.2px;
+        }
+
+        .login-sub {
+            font-size: 12px;
+            opacity: 0.75;
+            margin-top: 5px;
+            letter-spacing: 0.3px;
+        }
+
+        .login-body {
+            padding: 28px 30px 30px;
+        }
+
+        .lf-group {
+            margin-bottom: 16px;
+        }
+
+        .lf-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--ink2);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .lf-input {
+            width: 100%;
+            padding: 11px 13px;
+            border: 1.5px solid var(--border);
+            border-radius: 9px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: border-color .2s, box-shadow .2s;
+            background: var(--surface2);
+        }
+
+        .lf-input:focus {
+            border-color: var(--forest2);
+            box-shadow: 0 0 0 3px var(--forest-dim);
+            background: #fff;
+        }
+
+        .lf-btn {
+            width: 100%;
+            margin-top: 6px;
+            padding: 12px;
+            background: var(--forest);
+            color: #fff;
+            border: none;
+            border-radius: 9px;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            cursor: pointer;
+            transition: all .2s;
+        }
+
+        .lf-btn:hover {
+            background: var(--forest2);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(31, 107, 52, 0.3);
+        }
+
+        .lf-hint {
+            text-align: center;
+            font-size: 11px;
+            color: var(--ink3);
+            margin-top: 14px;
+            line-height: 1.6;
+        }
+
+        .lf-error {
+            display: none;
+            background: var(--high-dim);
+            color: var(--high);
+            font-size: 12px;
+            font-weight: 500;
+            padding: 9px 12px;
+            border-radius: 8px;
+            margin-bottom: 14px;
+        }
+
+        .lf-error.show {
+            display: block;
+        }
+
+        /* ── APP SHELL ── */
+        .app {
+            display: none;
+            height: 100dvh;
+            overflow: hidden;
+        }
+
+        .app.active {
+            display: flex;
+        }
+
+        .sidebar {
+            width: var(--nav-w);
+            background: var(--forest);
+            color: #eaf1ea;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: transform .3s ease;
+            z-index: 200;
+        }
+
+        .sb-head {
+            padding: 22px 20px 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            gap: 11px;
+            align-items: center;
+        }
+
+        .sb-seal {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .sb-title {
+            font-family: 'Spectral', serif;
+            font-size: 14.5px;
+            font-weight: 700;
+            line-height: 1.25;
+        }
+
+        .sb-sub {
+            font-size: 10px;
+            opacity: 0.65;
+            margin-top: 2px;
+            letter-spacing: 0.4px;
+        }
+
+        .sb-nav {
+            flex: 1;
+            padding: 14px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            overflow-y: auto;
+        }
+
+        .sb-link {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 10px 13px;
+            border-radius: 9px;
+            border: none;
+            background: none;
+            color: rgba(234, 241, 234, 0.72);
+            font-size: 13.5px;
+            font-weight: 500;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            transition: all .15s;
+        }
+
+        .sb-link:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: #fff;
+        }
+
+        .sb-link.active {
+            background: var(--gold);
+            color: #1c1204;
+            font-weight: 700;
+        }
+
+        .sb-icon {
+            font-size: 15px;
+            width: 18px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .sb-foot {
+            padding: 16px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 10.5px;
+            color: rgba(234, 241, 234, 0.55);
+            line-height: 1.6;
+        }
+
+        .sb-user {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 12px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sb-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .sb-uname {
+            font-size: 12.5px;
+            font-weight: 600;
+        }
+
+        .sb-urole {
+            font-size: 10px;
+            opacity: 0.6;
+        }
+
+        .sb-logout {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: rgba(234, 241, 234, 0.6);
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .topbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 26px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .topbar-title {
+            font-family: 'Spectral', serif;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .topbar-sub {
+            font-size: 12px;
+            color: var(--ink3);
+            margin-top: 2px;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .topbar-chip {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 5px 11px;
+            border-radius: 99px;
+            background: var(--forest-dim);
+            color: var(--forest2);
+        }
+
+        .menu-toggle {
+            display: none;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 7px 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 150;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        .view {
+            display: none;
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 26px 40px;
+            animation: fadeUp .25s ease;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(8px)
+            }
+
+            to {
+                opacity: 1;
+                transform: none
+            }
+        }
+
+        /* ── DASHBOARD ── */
+        .stat-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr) 1.3fr;
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            border-radius: var(--radius-sm);
+            padding: 16px 18px;
+            color: #fff;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            right: -18px;
+            bottom: -18px;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .stat-card.high {
+            background: linear-gradient(135deg, var(--high), #7d211b);
+        }
+
+        .stat-card.mod {
+            background: linear-gradient(135deg, var(--mod), #96501a);
+        }
+
+        .stat-card.low {
+            background: linear-gradient(135deg, var(--low), #9c7c1c);
+        }
+
+        .stat-card.vlow {
+            background: linear-gradient(135deg, var(--vlow), #1f5a29);
+        }
+
+        .stat-label {
+            font-size: 10.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            opacity: 0.85;
+        }
+
+        .stat-num {
+            font-family: 'Spectral', serif;
+            font-size: 32px;
+            font-weight: 700;
+            margin-top: 6px;
+        }
+
+        .stat-foot {
+            font-size: 10.5px;
+            opacity: 0.8;
+            margin-top: 3px;
+        }
+
+        .gauge-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow);
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .gauge-info-label {
+            font-size: 10.5px;
+            font-weight: 700;
+            color: var(--ink2);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .gauge-info-sub {
+            font-size: 10.5px;
+            color: var(--ink3);
+            margin-top: 2px;
+        }
+
+        .gauge-info-num {
+            font-family: 'Spectral', serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--forest);
+            margin-top: 2px;
+        }
+
+        .dash-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 16px;
+        }
+
+        .panel-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .panel-box-head {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .panel-box-title {
+            font-family: 'Spectral', serif;
+            font-size: 14.5px;
+            font-weight: 700;
+        }
+
+        .panel-box-sub {
+            font-size: 11px;
+            color: var(--ink3);
+            margin-top: 1px;
+        }
+
+        .panel-box-body {
+            padding: 16px 18px;
+        }
+
+        #dash-map {
+            height: 340px;
+            width: 100%;
+            background: #e9e6da;
+        }
+
+        .rank-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12.5px;
+        }
+
+        .rank-table th {
+            text-align: left;
+            padding: 8px 6px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--ink3);
+            border-bottom: 1.5px solid var(--border);
+        }
+
+        .rank-table td {
+            padding: 9px 6px;
+            border-bottom: 1px solid var(--surface2);
+        }
+
+        .rank-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .rank-num {
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            background: var(--forest-dim);
+            color: var(--forest2);
+            font-weight: 700;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lvl-pill {
+            display: inline-block;
+            padding: 2px 9px;
+            border-radius: 99px;
+            font-size: 10.5px;
+            font-weight: 700;
+        }
+
+        .lvl-pill.high {
+            background: var(--high-dim);
+            color: var(--high);
+        }
+
+        .lvl-pill.mod {
+            background: var(--mod-dim);
+            color: var(--mod);
+        }
+
+        .lvl-pill.low {
+            background: var(--low-dim);
+            color: #8a6f18;
+        }
+
+        .lvl-pill.vlow {
+            background: var(--vlow-dim);
+            color: var(--vlow);
+        }
+
+        .update-item {
+            display: flex;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--surface2);
+            font-size: 12px;
+        }
+
+        .update-item:last-child {
+            border-bottom: none;
+        }
+
+        .update-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--gold);
+            margin-top: 5px;
+            flex-shrink: 0;
+        }
+
+        .update-text {
+            color: var(--ink);
+        }
+
+        .update-time {
+            color: var(--ink3);
+            font-size: 10.5px;
+            margin-top: 2px;
+        }
+
+        /* ── MAP VIEW ── */
+        #panel-map-view {
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .map-view-wrap {
+            flex: 1;
+            position: relative;
+            min-height: 420px;
+        }
+
+        #full-map {
+            position: absolute;
+            inset: 0;
+        }
+
+        .map-legend {
+            position: absolute;
+            bottom: 18px;
+            left: 18px;
+            z-index: 400;
+            background: var(--surface);
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-lg);
+            padding: 14px 16px;
+            font-size: 12px;
+            min-width: 180px;
+        }
+
+        .map-legend-title {
+            font-weight: 700;
+            font-size: 11.5px;
+            margin-bottom: 8px;
+            color: var(--ink);
+        }
+
+        .leg-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 3px 0;
+            color: var(--ink2);
+        }
+
+        .leg-dot {
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        /* ── TABLE VIEWS (Barangays / Poverty Data / Users) ── */
+        .data-toolbar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 9px;
+            font-size: 13px;
+            outline: none;
+            background: var(--surface);
+        }
+
+        .search-input:focus {
+            border-color: var(--forest2);
+        }
+
+        .filter-select {
+            padding: 10px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: 9px;
+            font-size: 13px;
+            background: var(--surface);
+            cursor: pointer;
+        }
+
+        .data-table-wrap {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .data-table th {
+            background: var(--forest);
+            color: #fff;
+            text-align: left;
+            padding: 12px 16px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .data-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--surface2);
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table tr:hover td {
+            background: var(--surface2);
+        }
+
+        .bar-track {
+            width: 80px;
+            height: 6px;
+            background: var(--surface2);
+            border-radius: 99px;
+            overflow: hidden;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 99px;
+        }
+
+        /* ── REPORTS ── */
+        .report-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+            gap: 14px;
+        }
+
+        .rep-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 18px;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: all .18s;
+        }
+
+        .rep-card:hover {
+            border-color: var(--forest2);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .rep-icon {
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+
+        .rep-title {
+            font-weight: 700;
+            font-size: 13.5px;
+            margin-bottom: 4px;
+        }
+
+        .rep-desc {
+            font-size: 11.5px;
+            color: var(--ink3);
+            line-height: 1.5;
+        }
+
+        /* ── USERS / ACCOUNTS ── */
+        .acc-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 22px;
+            max-width: 520px;
+            margin-bottom: 18px;
+        }
+
+        .acc-restricted-note {
+            background: var(--gold-dim);
+            border: 1px solid var(--gold);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            font-size: 12.5px;
+            color: var(--ink2);
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .acc-restricted-note strong {
+            color: var(--gold);
+        }
+
+        .row-btn {
+            padding: 5px 10px;
+            font-size: 11px;
+        }
+
+        .row-btn+.row-btn {
+            margin-left: 6px;
+        }
+
+        /* ── SETTINGS ── */
+        .settings-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 22px;
+            max-width: 480px;
+        }
+
+        .settings-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 13px 0;
+            border-bottom: 1px solid var(--surface2);
+        }
+
+        .settings-row:last-child {
+            border-bottom: none;
+        }
+
+        .settings-label {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .settings-sub {
+            font-size: 11px;
+            color: var(--ink3);
+            margin-top: 2px;
+        }
+
+        .toggle {
+            width: 38px;
+            height: 22px;
+            border-radius: 99px;
+            background: var(--border);
+            position: relative;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .toggle.on {
+            background: var(--forest2);
+        }
+
+        .toggle-knob {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #fff;
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            transition: left .18s;
+        }
+
+        .toggle.on .toggle-knob {
+            left: 19px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 10px 16px;
+            border-radius: 9px;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all .18s;
+        }
+
+        .btn-primary {
+            background: var(--forest);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--forest2);
+        }
+
+        .btn-outline {
+            background: var(--surface);
+            color: var(--ink);
+            border: 1.5px solid var(--border);
+        }
+
+        .btn-outline:hover {
+            background: var(--surface2);
+        }
+
+        .toast-wrap {
+            position: fixed;
+            bottom: 22px;
+            right: 22px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .toast {
+            padding: 11px 16px;
+            border-radius: 9px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #fff;
+            box-shadow: var(--shadow-lg);
+            animation: toastIn .3s ease, toastOut .3s ease 2.7s forwards;
+        }
+
+        .toast.success {
+            background: var(--vlow);
+        }
+
+        .toast.info {
+            background: var(--forest);
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px)
+            }
+
+            to {
+                opacity: 1;
+                transform: none
+            }
+        }
+
+        @keyframes toastOut {
+            to {
+                opacity: 0;
+                transform: translateX(20px)
+            }
+        }
+
+        @media(max-width:900px) {
+            .stat-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .dash-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media(max-width:768px) {
+            .menu-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                transform: translateX(-100%);
+                box-shadow: 6px 0 30px rgba(0, 0, 0, 0.2);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .topbar {
+                padding-left: 56px;
+            }
+
+            .stat-row {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .view {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ══════════ LOGIN ══════════ -->
+    <div id="login-screen">
+        <div class="login-card">
+            <div class="login-head">
+                <div class="login-seal">📖</div>
+                <div class="login-title">ComBaTy</div>
+                <div class="login-sub">Community-Based Poverty Mapping · Manolo Fortich, Bukidnon</div>
+            </div>
+            <div class="login-body">
+                <div class="lf-error" id="login-error">Please enter both a username and password.</div>
+                <div class="lf-group">
+                    <label class="lf-label">Username</label>
+                    <input class="lf-input" id="login-user" placeholder="Enter your username">
+                </div>
+                <div class="lf-group">
+                    <label class="lf-label">Password</label>
+                    <input class="lf-input" type="password" id="login-pass" placeholder="Enter your password">
+                </div>
+                <button class="lf-btn" onclick="doLogin()">Log In</button>
+                <div class="lf-hint">Community-Based Poverty Mapping with Smart Analytics<br>LGU of Manolo Fortich ·
+                    Authorized personnel only</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════ APP SHELL ══════════ -->
+    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+    <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+    <div class="app" id="app">
+        <aside class="sidebar" id="sidebar">
+            <div class="sb-head">
+                <div class="sb-seal">🌾</div>
+                <div>
+                    <div class="sb-title">ComBaTy</div>
+                    <div class="sb-sub">MANOLO FORTICH, BUKIDNON</div>
+                </div>
+            </div>
+            <nav class="sb-nav">
+                <button class="sb-link active" data-view="dashboard" onclick="showView('dashboard')"><span
+                        class="sb-icon">🏠</span>Dashboard</button>
+                <button class="sb-link" data-view="barangays" onclick="showView('barangays')"><span
+                        class="sb-icon">📍</span>Barangays</button>
+                <button class="sb-link" data-view="poverty-data" onclick="showView('poverty-data')"><span
+                        class="sb-icon">📊</span>Poverty Data</button>
+                <button class="sb-link" data-view="map-view" onclick="showView('map-view')"><span
+                        class="sb-icon">🗺️</span>Map View</button>
+                <button class="sb-link" data-view="reports" onclick="showView('reports')"><span
+                        class="sb-icon">📄</span>Reports</button>
+                <button class="sb-link" data-view="users" onclick="showView('users')"><span
+                        class="sb-icon">👥</span>Users</button>
+                <button class="sb-link" data-view="settings" onclick="showView('settings')"><span
+                        class="sb-icon">⚙️</span>Settings</button>
+            </nav>
+            <div class="sb-user">
+                <div class="sb-avatar">🧑‍💼</div>
+                <div>
+                    <div class="sb-uname" id="sb-username">Admin</div>
+                    <div class="sb-urole" id="sb-userrole">Administrator</div>
+                </div>
+                <button class="sb-logout" onclick="doLogout()" title="Log out">⏻</button>
+            </div>
+            <div class="sb-foot">Community-Based Poverty Mapping<br>with Smart Analytics · v1.0</div>
+        </aside>
+
+        <main class="main">
+            <div class="topbar">
+                <div>
+                    <div class="topbar-title" id="topbar-title">Dashboard</div>
+                    <div class="topbar-sub" id="topbar-sub">Municipal poverty overview</div>
+                </div>
+                <div class="topbar-right">
+                    <span class="topbar-chip" id="topbar-chip">5 Barangays Tracked</span>
+                </div>
+            </div>
+
+            <!-- ── DASHBOARD ── -->
+            <div class="view active" id="view-dashboard">
+                <div class="stat-row">
+                    <div class="stat-card high">
+                        <div class="stat-label">High Poverty Barangays</div>
+                        <div class="stat-num" id="stat-high">0</div>
+                        <div class="stat-foot">36% and above</div>
+                    </div>
+                    <div class="stat-card mod">
+                        <div class="stat-label">Moderate Poverty Barangays</div>
+                        <div class="stat-num" id="stat-mod">0</div>
+                        <div class="stat-foot">21% – 35%</div>
+                    </div>
+                    <div class="stat-card low">
+                        <div class="stat-label">Low Poverty Barangays</div>
+                        <div class="stat-num" id="stat-low">0</div>
+                        <div class="stat-foot">11% – 20%</div>
+                    </div>
+                    <div class="stat-card vlow">
+                        <div class="stat-label">Very Low Poverty Barangays</div>
+                        <div class="stat-num" id="stat-vlow">0</div>
+                        <div class="stat-foot">0% – 10%</div>
+                    </div>
+                    <div class="gauge-card">
+                        <svg width="58" height="58" viewBox="0 0 58 58">
+                            <circle cx="29" cy="29" r="24" fill="none" stroke="#eef0e7" stroke-width="7" />
+                            <circle id="gauge-ring" cx="29" cy="29" r="24" fill="none" stroke="#b9862f" stroke-width="7"
+                                stroke-dasharray="150.8" stroke-dashoffset="150.8" stroke-linecap="round"
+                                transform="rotate(-90 29 29)" />
+                        </svg>
+                        <div>
+                            <div class="gauge-info-label">Overall Incidence</div>
+                            <div class="gauge-info-num" id="gauge-num">0.00%</div>
+                            <div class="gauge-info-sub">Average across tracked barangays</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dash-grid">
+                    <div class="panel-box">
+                        <div class="panel-box-head">
+                            <div>
+                                <div class="panel-box-title">Barangay Poverty Map</div>
+                                <div class="panel-box-sub">Classification by poverty incidence</div>
+                            </div>
+                        </div>
+                        <div id="dash-map"></div>
+                    </div>
+
+                    <div style="display:flex; flex-direction:column; gap:16px;">
+                        <div class="panel-box">
+                            <div class="panel-box-head">
+                                <div class="panel-box-title" id="top5-title">Top 5 High Poverty Barangays</div>
+                            </div>
+                            <div class="panel-box-body">
+                                <table class="rank-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Rank</th>
+                                            <th>Barangay</th>
+                                            <th>Level</th>
+                                            <th>Poverty %</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="top5-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="panel-box">
+                            <div class="panel-box-head">
+                                <div class="panel-box-title">Recent Updates</div>
+                            </div>
+                            <div class="panel-box-body" id="updates-body"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── BARANGAYS ── -->
+            <div class="view" id="view-barangays">
+                <div class="data-toolbar">
+                    <input class="search-input" id="bgy-search" placeholder="Search barangay..."
+                        oninput="renderBarangays()">
+                    <select class="filter-select" id="bgy-filter" onchange="renderBarangays()">
+                        <option value="">All levels</option>
+                        <option value="High">High</option>
+                        <option value="Moderate">Moderate</option>
+                        <option value="Low">Low</option>
+                        <option value="Very Low">Very Low</option>
+                    </select>
+                </div>
+                <div class="data-table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Barangay</th>
+                                <th>Households Surveyed</th>
+                                <th>Poverty Level</th>
+                                <th>Poverty Incidence</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bgy-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ── POVERTY DATA ── -->
+            <div class="view" id="view-poverty-data">
+                <div
+                    style="background:var(--gold-dim); border:1px solid var(--gold); border-radius:var(--radius-sm); padding:12px 16px; font-size:12.5px; color:var(--ink2); line-height:1.6; margin-bottom:16px;">
+                    <strong style="color:var(--gold);">Classification basis:</strong> household poverty status is
+                    classified by the trained ML model using income, occupation, and educational attainment as primary
+                    indicators, with household size, housing condition, and access to basic services as contributing
+                    factors. Figures shown are illustrative for the <span id="pd-banner-count">5</span> tracked
+                    barangays.
+                </div>
+                <div class="data-toolbar">
+                    <input class="search-input" id="pd-search" placeholder="Search barangay..."
+                        oninput="renderPovertyData()">
+                </div>
+                <div class="data-table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Barangay</th>
+                                <th>Income</th>
+                                <th>Occupation</th>
+                                <th>Educational Attainment</th>
+                                <th>Housing Condition</th>
+                                <th>Access to Basic Services</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pd-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ── MAP VIEW ── -->
+            <div class="view" id="view-map-view" style="padding:0;">
+                <div id="panel-map-view">
+                    <div class="map-view-wrap">
+                        <div id="full-map"></div>
+                        <div class="map-legend">
+                            <div class="map-legend-title">Poverty Classification</div>
+                            <div class="leg-row"><span class="leg-dot" style="background:var(--high)"></span>High (36%+)
+                            </div>
+                            <div class="leg-row"><span class="leg-dot" style="background:var(--mod)"></span>Moderate
+                                (21–35%)</div>
+                            <div class="leg-row"><span class="leg-dot" style="background:var(--low)"></span>Low (11–20%)
+                            </div>
+                            <div class="leg-row"><span class="leg-dot" style="background:var(--vlow)"></span>Very Low
+                                (0–10%)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── REPORTS ── -->
+            <div class="view" id="view-reports">
+                <div class="report-cards">
+                    <div class="rep-card" onclick="toast('Generating municipal summary report…')">
+                        <div class="rep-icon">📈</div>
+                        <div class="rep-title">Municipal Poverty Summary</div>
+                        <div class="rep-desc">Overview of poverty incidence across all tracked barangays.</div>
+                    </div>
+                    <div class="rep-card" onclick="toast('Generating barangay comparison report…')">
+                        <div class="rep-icon">📊</div>
+                        <div class="rep-title">Barangay Comparison</div>
+                        <div class="rep-desc">Side-by-side indicator breakdown for selected barangays.</div>
+                    </div>
+                    <div class="rep-card" onclick="toast('Generating trend analysis…')">
+                        <div class="rep-icon">📉</div>
+                        <div class="rep-title">Trend Analysis</div>
+                        <div class="rep-desc">Poverty indicator movement across survey periods.</div>
+                    </div>
+                    <div class="rep-card" onclick="toast('Generating pilot barangay report…')">
+                        <div class="rep-icon">🧭</div>
+                        <div class="rep-title">Pilot Coverage Report</div>
+                        <div class="rep-desc">Status of the pilot barangays under the ML classification model.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── USERS / ACCOUNTS ── -->
+            <div class="view" id="view-users">
+
+                <div id="acc-restricted-note" class="acc-restricted-note" style="display:none;">
+                    <strong>Restricted:</strong> only Administrator accounts can create, suspend, or remove accounts.
+                    You may still view the account list below.
+                </div>
+
+                <div id="acc-admin-tools" style="display:none;">
+                    <div class="data-toolbar">
+                        <button class="btn btn-primary" onclick="toggleCreateAccountForm()">➕ Create Account</button>
+                    </div>
+                    <div class="acc-card" id="create-account-card" style="display:none;">
+                        <div class="lf-group">
+                            <label class="lf-label">Username</label>
+                            <input class="lf-input" id="new-acc-username" placeholder="Enter username">
+                        </div>
+                        <div class="lf-group">
+                            <label class="lf-label">Password</label>
+                            <input class="lf-input" type="password" id="new-acc-password" placeholder="Enter password">
+                        </div>
+                        <div class="lf-group">
+                            <label class="lf-label">Role</label>
+                            <select class="filter-select" id="new-acc-role" style="width:100%;">
+                                <option value="Data Encoder">Data Encoder</option>
+                                <option value="Reviewer">Reviewer</option>
+                                <option value="Administrator">Administrator</option>
+                            </select>
+                        </div>
+                        <div class="lf-group">
+                            <label class="lf-label">Assigned Barangay</label>
+                            <input class="lf-input" id="new-acc-barangay" placeholder="e.g. Municipal-wide">
+                        </div>
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn btn-primary" onclick="createAccount()">Save Account</button>
+                            <button class="btn btn-outline" onclick="toggleCreateAccountForm()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="data-table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Role</th>
+                                <th>Assigned Barangay</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ── SETTINGS ── -->
+            <div class="view" id="view-settings">
+                <div class="settings-card">
+                    <div class="settings-row">
+                        <div>
+                            <div class="settings-label">Email notifications</div>
+                            <div class="settings-sub">Get notified when new survey data is submitted</div>
+                        </div>
+                        <div class="toggle on" onclick="this.classList.toggle('on')">
+                            <div class="toggle-knob"></div>
+                        </div>
+                    </div>
+                    <div class="settings-row">
+                        <div>
+                            <div class="settings-label">Auto-refresh dashboard</div>
+                            <div class="settings-sub">Refresh statistics every 5 minutes</div>
+                        </div>
+                        <div class="toggle" onclick="this.classList.toggle('on')">
+                            <div class="toggle-knob"></div>
+                        </div>
+                    </div>
+                    <div class="settings-row">
+                        <div>
+                            <div class="settings-label">Privacy-minimized view</div>
+                            <div class="settings-sub">Aggregate data at barangay/sitio level only</div>
+                        </div>
+                        <div class="toggle on" onclick="this.classList.toggle('on')">
+                            <div class="toggle-knob"></div>
+                        </div>
+                    </div>
+                    <div style="margin-top:18px; display:flex; gap:10px;">
+                        <button class="btn btn-primary" onclick="toast('Settings saved','success')">Save
+                            Changes</button>
+                        <button class="btn btn-outline" onclick="toast('Reverted to defaults')">Reset</button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <div class="toast-wrap" id="toast-wrap"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ── BARANGAY DATA ──
+        // Reduced to the 5 pilot barangays classified as High poverty.
+        const BARANGAYS = [
+            { name: "Guilang-guilang", level: "High", pct: 84.82, hh: 412, pilot: true, lat: 8.3745, lng: 124.8467, income: "Low", services: "Limited", housing: "Poor" },
+            { name: "Santiago", level: "High", pct: 76.35, hh: 389, pilot: true, lat: 8.3512, lng: 124.8801, income: "Low", services: "Limited", housing: "Poor" },
+            { name: "Ticala", level: "High", pct: 55.6, hh: 131, pilot: true, lat: 8.4034, lng: 124.8412, income: "Low", services: "Moderate", housing: "Fair" },
+            { name: "Maluko", level: "High", pct: 53.75, hh: 165, pilot: true, lat: 8.3298, lng: 124.8489, income: "Low", services: "Limited", housing: "Poor" },
+            { name: "Lunocan", level: "High", pct: 53.16, hh: 298, pilot: true, lat: 8.3901, lng: 124.8912, income: "Low", services: "Moderate", housing: "Fair" },
+        ];
+
+        const LEVEL_COLOR = { High: '#a4322a', Moderate: '#c76b1f', Low: '#c9a227', 'Very Low': '#2f7d3c' };
+        const LEVEL_CLASS = { High: 'high', Moderate: 'mod', Low: 'low', 'Very Low': 'vlow' };
+        const UPDATES = [
+            { text: 'Poverty data updated for Barangay Guilang-guilang', time: '2 hours ago' },
+            { text: 'New household survey submitted for Santiago', time: '5 hours ago' },
+            { text: 'Quarterly Trends Report generated (Q3 2026)', time: '1 day ago' },
+            { text: 'Barangay boundary layer synced', time: '2 days ago' },
+        ];
+
+        // ── ACCOUNTS (admin-managed, in-memory for this session) ──
+        // Only one Administrator account exists by default. Accounts live in a plain
+        // JS variable rather than persistent storage, so they reset on page reload;
+        // this keeps the demo self-contained without relying on browser storage APIs.
+        let ACCOUNTS = [
+            { username: '2031858@nbsc.edu.ph', password: 'Rafer1102', role: 'Administrator', barangay: 'Municipal-wide', status: 'Active' }
+        ];
+        let currentUser = null;
+
+        function ensureAdminSafety() {
+            // Safety net: never allow zero Administrator accounts to exist.
+            if (!ACCOUNTS.some(a => a.role === 'Administrator')) {
+                ACCOUNTS.push({ username: '2031858@nbsc.edu.ph', password: 'Rafer1102', role: 'Administrator', barangay: 'Municipal-wide', status: 'Active' });
+            }
+            // Safety net: never allow zero *active* Administrator accounts to exist —
+            // otherwise a suspended admin can permanently lock everyone out of the
+            // system, since login blocks non-Active accounts and only an already
+            // logged-in admin can reactivate one.
+            if (!ACCOUNTS.some(a => a.role === 'Administrator' && a.status === 'Active')) {
+                const admin = ACCOUNTS.find(a => a.role === 'Administrator');
+                if (admin) admin.status = 'Active';
+            }
+        }
+        function isAdmin() {
+            return !!(currentUser && currentUser.role === 'Administrator');
+        }
+
+        // ── LOGIN ──
+        function doLogin() {
+            const u = document.getElementById('login-user').value.trim();
+            const p = document.getElementById('login-pass').value.trim();
+            const err = document.getElementById('login-error');
+
+            if (!u || !p) {
+                err.textContent = 'Please enter both a username and password.';
+                err.classList.add('show');
+                return;
+            }
+
+            ensureAdminSafety();
+            const match = ACCOUNTS.find(a => a.username.toLowerCase() === u.toLowerCase() && a.password === p);
+
+            if (!match) {
+                err.textContent = 'Invalid username or password.';
+                err.classList.add('show');
+                return;
+            }
+            if (match.status && match.status !== 'Active') {
+                err.textContent = 'This account has been suspended. Contact the administrator.';
+                err.classList.add('show');
+                return;
+            }
+
+            err.classList.remove('show');
+            currentUser = match;
+            document.getElementById('sb-username').textContent = match.username;
+            document.getElementById('sb-userrole').textContent = match.role;
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app').classList.add('active');
+
+            applyRolePermissions();
+            renderUsersView();
+            setTimeout(initMaps, 60);
+        }
+        function doLogout() {
+            currentUser = null;
+            document.getElementById('app').classList.remove('active');
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('login-user').value = '';
+            document.getElementById('login-pass').value = '';
+        }
+
+        // Show/hide the Users nav link and account-management tools based on role
+        function applyRolePermissions() {
+            const admin = isAdmin();
+            const usersLink = document.querySelector('.sb-link[data-view="users"]');
+            if (usersLink) usersLink.style.display = admin ? 'flex' : 'none';
+
+            const adminTools = document.getElementById('acc-admin-tools');
+            const restrictedNote = document.getElementById('acc-restricted-note');
+            if (adminTools) adminTools.style.display = admin ? 'block' : 'none';
+            if (restrictedNote) restrictedNote.style.display = admin ? 'none' : 'block';
+        }
+
+        // ── ACCOUNT MANAGEMENT (admin only) ──
+        function toggleCreateAccountForm() {
+            const card = document.getElementById('create-account-card');
+            card.style.display = (card.style.display === 'none' || !card.style.display) ? 'block' : 'none';
+        }
+        function createAccount() {
+            if (!isAdmin()) { toast('Only Administrator accounts can create accounts.'); return; }
+            const username = document.getElementById('new-acc-username').value.trim();
+            const password = document.getElementById('new-acc-password').value.trim();
+            const role = document.getElementById('new-acc-role').value;
+            const barangay = document.getElementById('new-acc-barangay').value.trim() || 'Municipal-wide';
+
+            if (!username || !password) { toast('Username and password are required.'); return; }
+
+            if (ACCOUNTS.some(a => a.username.toLowerCase() === username.toLowerCase())) {
+                toast('That username already exists.');
+                return;
+            }
+            ACCOUNTS.push({ username, password, role, barangay, status: 'Active' });
+
+            document.getElementById('new-acc-username').value = '';
+            document.getElementById('new-acc-password').value = '';
+            document.getElementById('new-acc-barangay').value = '';
+            toggleCreateAccountForm();
+            renderUsersView();
+            toast('Account created successfully.', 'success');
+        }
+        function toggleAccountStatus(username) {
+            if (!isAdmin()) { toast('Only Administrator accounts can update account status.'); return; }
+            const target = ACCOUNTS.find(a => a.username === username);
+            if (!target) return;
+
+            // Guard: don't allow suspending the last active Administrator — doing so
+            // would lock everyone out, since a suspended account can't log back in
+            // to reverse it.
+            if (target.role === 'Administrator' && target.status === 'Active') {
+                const activeAdmins = ACCOUNTS.filter(a => a.role === 'Administrator' && a.status === 'Active');
+                if (activeAdmins.length <= 1) {
+                    toast('At least one active Administrator account must remain.');
+                    return;
+                }
+            }
+
+            target.status = (target.status === 'Active') ? 'Suspended' : 'Active';
+            renderUsersView();
+            toast(`Account ${target.status === 'Active' ? 'activated' : 'suspended'}.`, 'success');
+        }
+        function deleteAccount(username) {
+            if (!isAdmin()) { toast('Only Administrator accounts can remove accounts.'); return; }
+            if (currentUser && username.toLowerCase() === currentUser.username.toLowerCase()) {
+                toast('You cannot delete the account you are currently signed in with.');
+                return;
+            }
+            const target = ACCOUNTS.find(a => a.username === username);
+            if (target && target.role === 'Administrator' && ACCOUNTS.filter(a => a.role === 'Administrator').length <= 1) {
+                toast('At least one Administrator account must remain.');
+                return;
+            }
+            ACCOUNTS = ACCOUNTS.filter(a => a.username !== username);
+            renderUsersView();
+            toast('Account removed.', 'success');
+        }
+        function renderUsersView() {
+            const admin = isAdmin();
+            document.getElementById('users-table-body').innerHTML = ACCOUNTS.map(a => `
+    <tr>
+      <td><strong>${a.username}</strong>${currentUser && a.username === currentUser.username ? ' <span style="font-size:10px;color:var(--forest2);font-weight:700;">· YOU</span>' : ''}</td>
+      <td>${a.role}</td>
+      <td>${a.barangay || '—'}</td>
+      <td><span class="lvl-pill ${a.status === 'Active' ? 'vlow' : 'high'}">${a.status || 'Active'}</span></td>
+      <td>${admin ? `
+        <button class="btn btn-outline row-btn" onclick="toggleAccountStatus('${a.username}')">${a.status === 'Active' ? 'Suspend' : 'Activate'}</button>
+        <button class="btn btn-outline row-btn" style="color:var(--high);" onclick="deleteAccount('${a.username}')">Delete</button>
+      ` : '—'}</td>
+    </tr>`).join('');
+        }
+
+        // ── NAV ──
+        const TITLES = {
+            dashboard: ['Dashboard', 'Municipal poverty overview'],
+            barangays: ['Barangays', 'Manage and browse all tracked barangays'],
+            'poverty-data': ['Poverty Data', 'Indicator-level survey data by barangay'],
+            'map-view': ['Map View', 'Geographic distribution of poverty classification'],
+            reports: ['Reports', 'Generate poverty analysis reports'],
+            users: ['Users', 'Manage system accounts and access'],
+            settings: ['Settings', 'System preferences'],
+        };
+        function showView(name) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById('view-' + name).classList.add('active');
+            document.querySelectorAll('.sb-link').forEach(n => n.classList.remove('active'));
+            document.querySelector(`.sb-link[data-view="${name}"]`).classList.add('active');
+            document.getElementById('topbar-title').textContent = TITLES[name][0];
+            document.getElementById('topbar-sub').textContent = TITLES[name][1];
+            if (name === 'users') renderUsersView();
+            if (window.innerWidth <= 768) closeSidebar();
+            if (name === 'map-view' && fullMap) setTimeout(() => fullMap.invalidateSize(), 80);
+            if (name === 'dashboard' && dashMap) setTimeout(() => dashMap.invalidateSize(), 80);
+        }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); document.getElementById('overlay').classList.toggle('active'); }
+        function closeSidebar() { document.getElementById('sidebar').classList.remove('active'); document.getElementById('overlay').classList.remove('active'); }
+
+        // ── DASHBOARD FILL ──
+        function renderStats() {
+            const counts = { High: 0, Moderate: 0, Low: 0, 'Very Low': 0 };
+            let totalPct = 0;
+            BARANGAYS.forEach(b => { counts[b.level] = (counts[b.level] || 0) + 1; totalPct += b.pct; });
+            document.getElementById('stat-high').textContent = counts.High;
+            document.getElementById('stat-mod').textContent = counts.Moderate;
+            document.getElementById('stat-low').textContent = counts.Low;
+            document.getElementById('stat-vlow').textContent = counts['Very Low'];
+
+            const avgPct = BARANGAYS.length ? (totalPct / BARANGAYS.length) : 0;
+            document.getElementById('gauge-num').textContent = avgPct.toFixed(2) + '%';
+            const circumference = 150.8;
+            const ring = document.getElementById('gauge-ring');
+            ring.setAttribute('stroke-dashoffset', (circumference * (1 - avgPct / 100)).toFixed(1));
+
+            document.getElementById('topbar-chip').textContent = `${BARANGAYS.length} Barangays Tracked`;
+            document.getElementById('pd-banner-count').textContent = BARANGAYS.length;
+            document.getElementById('top5-title').textContent = `Top ${Math.min(5, BARANGAYS.length)} High Poverty Barangays`;
+        }
+        function renderTop5() {
+            const top5 = [...BARANGAYS].sort((a, b) => b.pct - a.pct).slice(0, 5);
+            document.getElementById('top5-body').innerHTML = top5.map((b, i) => `
+    <tr>
+      <td><div class="rank-num">${i + 1}</div></td>
+      <td>${b.name}</td>
+      <td><span class="lvl-pill ${LEVEL_CLASS[b.level]}">${b.level}</span></td>
+      <td>Poverty ${b.pct}%</td>
+    </tr>`).join('');
+        }
+        function renderUpdates() {
+            document.getElementById('updates-body').innerHTML = UPDATES.map(u => `
+    <div class="update-item">
+      <div class="update-dot"></div>
+      <div><div class="update-text">${u.text}</div><div class="update-time">${u.time}</div></div>
+    </div>`).join('');
+        }
+
+        // ── BARANGAYS TABLE ──
+        function renderBarangays() {
+            const q = document.getElementById('bgy-search').value.toLowerCase();
+            const lvl = document.getElementById('bgy-filter').value;
+            const rows = BARANGAYS.filter(b => b.name.toLowerCase().includes(q) && (!lvl || b.level === lvl));
+            document.getElementById('bgy-table-body').innerHTML = rows.map(b => `
+    <tr>
+      <td><strong>${b.name}</strong>${b.pilot ? ' <span style="font-size:10px;color:var(--forest2);font-weight:700;">· PILOT</span>' : ''}</td>
+      <td>${b.hh}</td>
+      <td><span class="lvl-pill ${LEVEL_CLASS[b.level]}">${b.level}</span></td>
+      <td><span class="bar-track"><span class="bar-fill" style="width:${b.pct}%;background:${LEVEL_COLOR[b.level]}"></span></span>${b.pct}%</td>
+    </tr>`).join('') || `<tr><td colspan="4" style="text-align:center;color:var(--ink3);padding:24px;">No barangays match your search.</td></tr>`;
+        }
+
+        // ── POVERTY DATA TABLE ──
+        // Occupation / educational attainment classifications derived from ML-classified
+        // poverty level, per the indicators the trained model is built on (income,
+        // occupation, educational attainment — plus housing and access to services).
+        const OCCUPATION_BY_LEVEL = { High: 'Informal / seasonal farm labor', Moderate: 'Informal, irregular income', Low: 'Formal, semi-regular income', 'Very Low': 'Formal, stable employment' };
+        const EDU_BY_LEVEL = { High: 'Elementary undergrad/grad', Moderate: 'Some secondary education', Low: 'Secondary graduate', 'Very Low': 'Secondary/tertiary graduate' };
+        function renderPovertyData() {
+            const q = document.getElementById('pd-search').value.toLowerCase();
+            const rows = BARANGAYS.filter(b => b.name.toLowerCase().includes(q));
+            document.getElementById('pd-table-body').innerHTML = rows.map(b => `
+    <tr>
+      <td><strong>${b.name}</strong></td>
+      <td>${b.income}</td>
+      <td>${OCCUPATION_BY_LEVEL[b.level]}</td>
+      <td>${EDU_BY_LEVEL[b.level]}</td>
+      <td>${b.housing}</td>
+      <td>${b.services}</td>
+    </tr>`).join('');
+        }
+
+        // ── MAPS ──
+        let dashMap, fullMap;
+        function buildMap(elId) {
+            const m = L.map(elId, { zoomControl: true, scrollWheelZoom: true }).setView([8.3648, 124.8600], 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap', maxZoom: 19
+            }).addTo(m);
+            BARANGAYS.forEach(b => {
+                L.circleMarker([b.lat, b.lng], {
+                    radius: 9, color: '#fff', weight: 2, fillColor: LEVEL_COLOR[b.level], fillOpacity: 0.9
+                }).addTo(m).bindPopup(`<b>${b.name}</b><br>${b.level} poverty · ${b.pct}%${b.pilot ? '<br><em style="color:#1f6b34">Pilot barangay</em>' : ''}`);
+            });
+            return m;
+        }
+        function initMaps() {
+            if (!dashMap) dashMap = buildMap('dash-map');
+            if (!fullMap) fullMap = buildMap('full-map');
+            setTimeout(() => { dashMap.invalidateSize(); fullMap.invalidateSize(); }, 100);
+        }
+
+        // ── TOAST ──
+        function toast(msg, type = 'info') {
+            const wrap = document.getElementById('toast-wrap');
+            const t = document.createElement('div');
+            t.className = 'toast ' + type;
+            t.textContent = msg;
+            wrap.appendChild(t);
+            setTimeout(() => t.remove(), 3100);
+        }
+        // ── INIT ──
+        ensureAdminSafety();
+        renderStats();
+        renderTop5();
+        renderUpdates();
+        renderBarangays();
+        renderPovertyData();
+        window.addEventListener('resize', () => { if (dashMap) dashMap.invalidateSize(); if (fullMap) fullMap.invalidateSize(); });
+    </script>
+</body>
+
+</html>
