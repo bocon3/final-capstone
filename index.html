@@ -1213,7 +1213,7 @@
                 </div>
                 <button class="lf-btn" onclick="doLogin()">Log In</button>
                 <div class="lf-hint">Community-Based Poverty Mapping with Smart Analytics<br>LGU of Manolo Fortich ·
-                    Authorized personnel only</div>
+                    Admin (MSWDO) · LGU Staff · Barangay accounts</div>
             </div>
         </div>
     </div>
@@ -1628,9 +1628,9 @@
                         <div class="lf-group">
                             <label class="lf-label">Role</label>
                             <select class="filter-select" id="new-acc-role" style="width:100%;">
-                                <option value="Data Encoder">Data Encoder</option>
-                                <option value="Reviewer">Reviewer</option>
-                                <option value="Administrator">Administrator</option>
+                                <option value="LGU Staff">LGU Staff</option>
+                                <option value="Barangay">Barangay</option>
+                                <option value="Administrator">Administrator (MSWDO)</option>
                             </select>
                         </div>
                         <div class="lf-group">
@@ -1753,9 +1753,21 @@
         // JS variable rather than persistent storage, so they reset on page reload;
         // this keeps the demo self-contained without relying on browser storage APIs.
         let ACCOUNTS = [
-            { username: '2031858@nbsc.edu.ph', password: 'Rafer1102', role: 'Administrator', barangay: 'Municipal-wide', status: 'Active' }
+            { username: '2031858@nbsc.edu.ph', password: 'Rafer1102', role: 'Administrator', barangay: 'Municipal-wide', status: 'Active' },
+            { username: 'lgu.staff', password: 'LguStaff@2026', role: 'LGU Staff', barangay: 'Municipal-wide', status: 'Active' },
+            { username: 'barangay.guilangguilang', password: 'Barangay@2026', role: 'Barangay', barangay: 'Guilang-guilang', status: 'Active' }
         ];
         let currentUser = null;
+
+        // Use case diagram → which sidebar views each role may open.
+        //   ADMIN (MSWDO): every use case bubble
+        //   LGU STAFF: Dashboard, Manage Poverty Data, View GIS Map, Generate Reports
+        //   BARANGAY: Dashboard, View GIS Map only
+        const ROLE_PERMISSIONS = {
+            'Administrator': ['dashboard', 'barangays', 'poverty-data', 'map-view', 'reports', 'users', 'settings'],
+            'LGU Staff': ['dashboard', 'poverty-data', 'map-view', 'reports'],
+            'Barangay': ['dashboard', 'map-view'],
+        };
 
         function ensureAdminSafety() {
             // Safety net: never allow zero Administrator accounts to exist.
@@ -1820,12 +1832,16 @@
             document.getElementById('login-pass').value = '';
         }
 
-        // Show/hide the Users nav link and account-management tools based on role
+        // Show/hide every sidebar link based on the current role's permitted views
+        // (per the use case diagram), plus the account-management tools.
         function applyRolePermissions() {
-            const admin = isAdmin();
-            const usersLink = document.querySelector('.sb-link[data-view="users"]');
-            if (usersLink) usersLink.style.display = admin ? 'flex' : 'none';
+            const allowed = (currentUser && ROLE_PERMISSIONS[currentUser.role]) || ['dashboard'];
+            document.querySelectorAll('.sb-link').forEach(link => {
+                const view = link.dataset.view;
+                link.style.display = allowed.includes(view) ? 'flex' : 'none';
+            });
 
+            const admin = isAdmin();
             const adminTools = document.getElementById('acc-admin-tools');
             const restrictedNote = document.getElementById('acc-restricted-note');
             if (adminTools) adminTools.style.display = admin ? 'block' : 'none';
@@ -1920,6 +1936,8 @@
             settings: ['Settings', 'System preferences'],
         };
         function showView(name) {
+            const allowed = (currentUser && ROLE_PERMISSIONS[currentUser.role]) || ['dashboard'];
+            if (!allowed.includes(name)) name = 'dashboard';
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.getElementById('view-' + name).classList.add('active');
             document.querySelectorAll('.sb-link').forEach(n => n.classList.remove('active'));
@@ -2133,8 +2151,8 @@
         let dashMap, fullMap;
         function buildMap(elId) {
             const m = L.map(elId, { zoomControl: true, scrollWheelZoom: true }).setView([8.3648, 124.8600], 12);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap', maxZoom: 19
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '© <a href="https://carto.com/attributions">CARTO</a> © OpenStreetMap contributors', maxZoom: 19, subdomains: 'abcd'
             }).addTo(m);
             BARANGAYS.forEach(b => {
                 L.circleMarker([b.lat, b.lng], {
