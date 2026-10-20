@@ -2,1917 +2,670 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ComBaTy — Community-Based Poverty Mapping with Regression Analysis| Manolo Fortich, Bukidnon</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-        :root {
-            --forest: #0d3b1e;
-            --forest2: #1f6b34;
-            --forest-dim: rgba(31, 107, 52, 0.1);
-            --gold: #b9862f;
-            --gold-dim: rgba(185, 134, 47, 0.12);
-            --bg: #f5f4ee;
-            --surface: #ffffff;
-            --surface2: #eef0e7;
-            --border: #e0ddd0;
-            --ink: #16201a;
-            --ink2: #5c6a5e;
-            --ink3: #93a294;
-            --high: #a4322a;
-            --high-dim: rgba(164, 50, 42, 0.1);
-            --mod: #c76b1f;
-            --mod-dim: rgba(199, 107, 31, 0.1);
-            --low: #c9a227;
-            --low-dim: rgba(201, 162, 39, 0.12);
-            --vlow: #2f7d3c;
-            --vlow-dim: rgba(47, 125, 60, 0.1);
-            --radius: 16px;
-            --radius-sm: 10px;
-            --shadow: 0 2px 14px rgba(13, 59, 30, 0.07);
-            --shadow-lg: 0 10px 36px rgba(13, 59, 30, 0.14);
-            --nav-w: 250px;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html,
-        body {
-            height: 100%;
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--ink);
-        }
-
-        .display {
-            font-family: 'Spectral', serif;
-        }
-
-        .mono {
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        /* ── LOGIN ── */
-        #login-screen {
-            position: fixed;
-            inset: 0;
-            z-index: 1000;
-            background:
-                radial-gradient(circle at 18% 20%, rgba(255, 255, 255, 0.05), transparent 40%),
-                linear-gradient(160deg, #0a2412 0%, #0d3b1e 55%, #123f22 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
-        }
-
-        .login-card {
-            width: 100%;
-            max-width: 380px;
-            background: var(--surface);
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
-            animation: cardIn 0.5s cubic-bezier(.2, .8, .2, 1);
-        }
-
-        @keyframes cardIn {
-            from {
-                opacity: 0;
-                transform: translateY(18px) scale(0.98)
-            }
-
-            to {
-                opacity: 1;
-                transform: none
-            }
-        }
-
-        .login-head {
-            background: linear-gradient(135deg, var(--forest), #123f22);
-            padding: 30px 30px 22px;
-            text-align: center;
-            color: #fff;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .login-head::after {
-            content: '';
-            position: absolute;
-            right: -40px;
-            top: -40px;
-            width: 140px;
-            height: 140px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.06);
-        }
-
-        .login-seal {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: var(--gold);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 23px;
-            margin: 0 auto 12px;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
-        }
-
-        .login-title {
-            font-family: 'Spectral', serif;
-            font-size: 21px;
-            font-weight: 700;
-            letter-spacing: -0.2px;
-        }
-
-        .login-sub {
-            font-size: 12px;
-            opacity: 0.75;
-            margin-top: 4px;
-            letter-spacing: 0.3px;
-        }
-
-        .login-body {
-            padding: 24px 28px 26px;
-        }
-
-        .lf-group {
-            margin-bottom: 14px;
-        }
-
-        .lf-group:last-of-type {
-            margin-bottom: 0;
-        }
-
-        .lf-label {
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--ink2);
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-            margin-bottom: 5px;
-            display: block;
-        }
-
-        .lf-input {
-            width: 100%;
-            padding: 11px 13px;
-            border: 1.5px solid var(--border);
-            border-radius: 9px;
-            font-family: 'Inter', sans-serif;
-            font-size: 14px;
-            outline: none;
-            transition: border-color .2s, box-shadow .2s;
-            background: var(--surface2);
-        }
-
-        .lf-input:focus {
-            border-color: var(--forest2);
-            box-shadow: 0 0 0 3px var(--forest-dim);
-            background: #fff;
-        }
-
-        .lf-btn {
-            width: 100%;
-            margin-top: 16px;
-            padding: 12px;
-            background: var(--forest);
-            color: #fff;
-            border: none;
-            border-radius: 9px;
-            font-size: 16px;
-            font-weight: 700;
-            letter-spacing: 0.2px;
-            cursor: pointer;
-            transition: all .2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .lf-btn:hover {
-            background: var(--forest2);
-            transform: translateY(-1px);
-            box-shadow: 0 6px 18px rgba(31, 107, 52, 0.3);
-        }
-
-        .lf-hint {
-            text-align: center;
-            font-size: 11px;
-            color: var(--ink3);
-            margin-top: 14px;
-            line-height: 1.55;
-        }
-
-        .lf-error {
-            display: none;
-            background: var(--high-dim);
-            color: var(--high);
-            font-size: 12px;
-            font-weight: 500;
-            padding: 9px 12px;
-            border-radius: 8px;
-            margin-bottom: 14px;
-        }
-
-        .lf-error.show {
-            display: block;
-        }
-
-        /* ── ICON BUTTONS ── */
-        .icon-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 34px;
-            height: 34px;
-            border-radius: 9px;
-            border: none;
-            cursor: pointer;
-            font-size: 15px;
-            line-height: 1;
-            transition: all .15s;
-            flex-shrink: 0;
-        }
-
-        .icon-btn+.icon-btn {
-            margin-left: 6px;
-        }
-
-        .icon-btn.primary {
-            background: var(--forest);
-            color: #fff;
-        }
-
-        .icon-btn.primary:hover {
-            background: var(--forest2);
-            transform: translateY(-1px);
-        }
-
-        .icon-btn.outline {
-            background: var(--surface);
-            border: 1.5px solid var(--border);
-            color: var(--ink2);
-        }
-
-        .icon-btn.outline:hover {
-            background: var(--surface2);
-            color: var(--ink);
-        }
-
-        .icon-btn.danger {
-            background: var(--high-dim);
-            color: var(--high);
-        }
-
-        .icon-btn.danger:hover {
-            background: var(--high);
-            color: #fff;
-        }
-
-        .icon-btn.success {
-            background: var(--vlow);
-            color: #fff;
-        }
-
-        .icon-btn.success:hover {
-            filter: brightness(1.08);
-        }
-
-        .icon-btn:disabled {
-            opacity: .45;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        /* ── APP SHELL ── */
-        .app {
-            display: none;
-            height: 100dvh;
-            overflow: hidden;
-        }
-
-        .app.active {
-            display: flex;
-        }
-
-        .sidebar {
-            width: var(--nav-w);
-            background: var(--forest);
-            color: #eaf1ea;
-            display: flex;
-            flex-direction: column;
-            flex-shrink: 0;
-            transition: transform .3s ease;
-            z-index: 200;
-        }
-
-        .sb-head {
-            padding: 20px 20px 16px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            gap: 11px;
-            align-items: center;
-        }
-
-        .sb-seal {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            background: var(--gold);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            flex-shrink: 0;
-        }
-
-        .sb-title {
-            font-family: 'Spectral', serif;
-            font-size: 14.5px;
-            font-weight: 700;
-            line-height: 1.25;
-        }
-
-        .sb-sub {
-            font-size: 10px;
-            opacity: 0.65;
-            margin-top: 2px;
-            letter-spacing: 0.4px;
-        }
-
-        .sb-nav {
-            flex: 1;
-            padding: 10px 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            overflow-y: auto;
-        }
-
-        .sb-link {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 11px 13px;
-            border-radius: 9px;
-            border: none;
-            background: none;
-            color: rgba(234, 241, 234, 0.72);
-            font-size: 13.5px;
-            font-weight: 500;
-            cursor: pointer;
-            width: 100%;
-            transition: all .15s;
-        }
-
-        .sb-link:hover {
-            background: rgba(255, 255, 255, 0.06);
-            color: #fff;
-        }
-
-        .sb-link.active {
-            background: var(--gold);
-            color: #1c1204;
-            font-weight: 700;
-        }
-
-        .sb-icon {
-            font-size: 19px;
-            width: 20px;
-            text-align: center;
-            flex-shrink: 0;
-        }
-
-        .sb-foot {
-            padding: 12px 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            font-size: 10.5px;
-            color: rgba(234, 241, 234, 0.55);
-            line-height: 1.5;
-        }
-
-        .sb-user {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            padding: 12px 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .sb-avatar {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.12);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-        }
-
-        .sb-uname {
-            font-size: 12.5px;
-            font-weight: 600;
-        }
-
-        .sb-urole {
-            font-size: 10px;
-            opacity: 0.6;
-        }
-
-        .sb-logout {
-            margin-left: auto;
-            background: none;
-            border: none;
-            color: rgba(234, 241, 234, 0.6);
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .topbar {
-            background: var(--surface);
-            border-bottom: 1px solid var(--border);
-            padding: 14px 26px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-shrink: 0;
-        }
-
-        .topbar-title {
-            font-family: 'Spectral', serif;
-            font-size: 20px;
-            font-weight: 700;
-        }
-
-        .topbar-sub {
-            font-size: 12px;
-            color: var(--ink3);
-            margin-top: 1px;
-        }
-
-        .topbar-right {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .topbar-chip {
-            font-size: 11px;
-            font-weight: 600;
-            padding: 5px 11px;
-            border-radius: 99px;
-            background: var(--forest-dim);
-            color: var(--forest2);
-        }
-
-        .menu-toggle {
-            display: none;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 7px 10px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        .overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.4);
-            z-index: 150;
-        }
-
-        .overlay.active {
-            display: block;
-        }
-
-        .view {
-            display: none;
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px 26px 24px;
-            animation: fadeUp .25s ease;
-        }
-
-        .view.active {
-            display: block;
-        }
-
-        @keyframes fadeUp {
-            from {
-                opacity: 0;
-                transform: translateY(8px)
-            }
-
-            to {
-                opacity: 1;
-                transform: none
-            }
-        }
-
-        /* ── DASHBOARD ── */
-        .stat-row {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr) 1.3fr;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .stat-card {
-            border-radius: var(--radius-sm);
-            padding: 15px 17px;
-            color: #fff;
-            box-shadow: var(--shadow);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::after {
-            content: '';
-            position: absolute;
-            right: -18px;
-            bottom: -18px;
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.08);
-        }
-
-        .stat-card.high {
-            background: linear-gradient(135deg, var(--high), #7d211b);
-        }
-
-        .stat-card.mod {
-            background: linear-gradient(135deg, var(--mod), #96501a);
-        }
-
-        .stat-card.low {
-            background: linear-gradient(135deg, var(--low), #9c7c1c);
-        }
-
-        .stat-card.vlow {
-            background: linear-gradient(135deg, var(--vlow), #1f5a29);
-        }
-
-        .stat-label {
-            font-size: 10.5px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-            opacity: 0.85;
-        }
-
-        .stat-num {
-            font-family: 'Spectral', serif;
-            font-size: 30px;
-            font-weight: 700;
-            margin-top: 4px;
-        }
-
-        .stat-foot {
-            font-size: 10.5px;
-            opacity: 0.8;
-            margin-top: 2px;
-        }
-
-        .gauge-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            box-shadow: var(--shadow);
-            padding: 13px 17px;
-            display: flex;
-            align-items: center;
-            gap: 13px;
-        }
-
-        .gauge-info-label {
-            font-size: 10.5px;
-            font-weight: 700;
-            color: var(--ink2);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .gauge-info-sub {
-            font-size: 10.5px;
-            color: var(--ink3);
-            margin-top: 2px;
-        }
-
-        .gauge-info-num {
-            font-family: 'Spectral', serif;
-            font-size: 22px;
-            font-weight: 700;
-            color: var(--forest);
-            margin-top: 1px;
-        }
-
-        .dash-grid {
-            display: grid;
-            grid-template-columns: 1.5fr 1fr;
-            gap: 14px;
-        }
-
-        .panel-box {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            overflow: hidden;
-        }
-
-        .panel-box+.panel-box {
-            margin-top: 14px;
-        }
-
-        .panel-box-head {
-            padding: 13px 18px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-        }
-
-        .panel-box-title {
-            font-family: 'Spectral', serif;
-            font-size: 14.5px;
-            font-weight: 700;
-        }
-
-        .panel-box-sub {
-            font-size: 11px;
-            color: var(--ink3);
-            margin-top: 1px;
-        }
-
-        .panel-box-body {
-            padding: 14px 18px;
-        }
-
-        #dash-map {
-            height: 340px;
-            width: 100%;
-            background: #e9e6da;
-        }
-
-        .rank-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12.5px;
-        }
-
-        .rank-table th {
-            text-align: left;
-            padding: 7px 6px;
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--ink3);
-            border-bottom: 1.5px solid var(--border);
-        }
-
-        .rank-table td {
-            padding: 8px 6px;
-            border-bottom: 1px solid var(--surface2);
-        }
-
-        .rank-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .rank-num {
-            width: 22px;
-            height: 22px;
-            border-radius: 6px;
-            background: var(--forest-dim);
-            color: var(--forest2);
-            font-weight: 700;
-            font-size: 11px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .lvl-pill {
-            display: inline-block;
-            padding: 2px 9px;
-            border-radius: 99px;
-            font-size: 10.5px;
-            font-weight: 700;
-        }
-
-        .lvl-pill.high {
-            background: var(--high-dim);
-            color: var(--high);
-        }
-
-        .lvl-pill.mod {
-            background: var(--mod-dim);
-            color: var(--mod);
-        }
-
-        .lvl-pill.low {
-            background: var(--low-dim);
-            color: #8a6f18;
-        }
-
-        .lvl-pill.vlow {
-            background: var(--vlow-dim);
-            color: var(--vlow);
-        }
-
-        .update-item {
-            display: flex;
-            gap: 10px;
-            padding: 9px 0;
-            border-bottom: 1px solid var(--surface2);
-            font-size: 12px;
-        }
-
-        .update-item:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-
-        .update-item:first-child {
-            padding-top: 0;
-        }
-
-        .update-dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: var(--gold);
-            margin-top: 5px;
-            flex-shrink: 0;
-        }
-
-        .update-text {
-            color: var(--ink);
-        }
-
-        .update-time {
-            color: var(--ink3);
-            font-size: 10.5px;
-            margin-top: 2px;
-        }
-
-        /* ── MAP VIEW ── */
-        #panel-map-view {
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-
-        .map-view-wrap {
-            flex: 1;
-            position: relative;
-            min-height: 420px;
-        }
-
-        #full-map {
-            position: absolute;
-            inset: 0;
-        }
-
-        .map-legend {
-            position: absolute;
-            bottom: 18px;
-            left: 18px;
-            z-index: 400;
-            background: var(--surface);
-            border-radius: var(--radius-sm);
-            box-shadow: var(--shadow-lg);
-            padding: 13px 15px;
-            font-size: 12px;
-            min-width: 180px;
-        }
-
-        .map-legend-title {
-            font-weight: 700;
-            font-size: 11.5px;
-            margin-bottom: 7px;
-            color: var(--ink);
-        }
-
-        .leg-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 3px 0;
-            color: var(--ink2);
-        }
-
-        .leg-dot {
-            width: 11px;
-            height: 11px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
-        /* ── TABLE VIEWS (Barangays / Poverty Data / Users) ── */
-        .data-toolbar {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            margin-bottom: 14px;
-            flex-wrap: wrap;
-        }
-
-        .search-input {
-            flex: 1;
-            min-width: 200px;
-            padding: 10px 14px;
-            border: 1.5px solid var(--border);
-            border-radius: 9px;
-            font-size: 13px;
-            outline: none;
-            background: var(--surface);
-        }
-
-        .search-input:focus {
-            border-color: var(--forest2);
-        }
-
-        .filter-select {
-            padding: 10px 12px;
-            border: 1.5px solid var(--border);
-            border-radius: 9px;
-            font-size: 13px;
-            background: var(--surface);
-            cursor: pointer;
-        }
-
-        .data-table-wrap {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            overflow: hidden;
-        }
-
-        .data-table-wrap+.data-table-wrap {
-            margin-top: 14px;
-        }
-
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-        }
-
-        .data-table th {
-            background: var(--forest);
-            color: #fff;
-            text-align: left;
-            padding: 11px 16px;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 600;
-        }
-
-        .data-table td {
-            padding: 11px 16px;
-            border-bottom: 1px solid var(--surface2);
-        }
-
-        .data-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .data-table tr:hover td {
-            background: var(--surface2);
-        }
-
-        .bar-track {
-            width: 80px;
-            height: 6px;
-            background: var(--surface2);
-            border-radius: 99px;
-            overflow: hidden;
-            display: inline-block;
-            vertical-align: middle;
-            margin-right: 8px;
-        }
-
-        .bar-fill {
-            height: 100%;
-            border-radius: 99px;
-        }
-
-        .muted-cell {
-            color: var(--ink3);
-        }
-
-        .pd-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 14px;
-            align-items: start;
-        }
-
-        .table-scroll {
-            overflow-x: auto;
-        }
-
-        @media(max-width:1100px) {
-            .pd-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* ── ADD-RECORD FORM ── */
-        .record-form {
-            padding: 15px 18px;
-            border-bottom: 1px solid var(--border);
-            background: var(--surface2);
-        }
-
-        .record-form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 12px;
-            margin-bottom: 12px;
-        }
-
-        .record-form-actions {
-            display: flex;
-            align-items: center;
-        }
-
-        /* ── REPORTS ── */
-        .report-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-            gap: 14px;
-        }
-
-        .rep-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 18px;
-            box-shadow: var(--shadow);
-            cursor: pointer;
-            transition: all .18s;
-        }
-
-        .rep-card:hover {
-            border-color: var(--forest2);
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-lg);
-        }
-
-        .rep-icon {
-            font-size: 22px;
-            margin-bottom: 9px;
-        }
-
-        .rep-title {
-            font-weight: 700;
-            font-size: 13.5px;
-            margin-bottom: 4px;
-        }
-
-        .rep-desc {
-            font-size: 11.5px;
-            color: var(--ink3);
-            line-height: 1.5;
-        }
-
-        /* ── USERS / ACCOUNTS ── */
-        .acc-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            padding: 20px;
-            max-width: 520px;
-            margin-bottom: 14px;
-        }
-
-        .acc-restricted-note {
-            background: var(--gold-dim);
-            border: 1px solid var(--gold);
-            border-radius: var(--radius-sm);
-            padding: 12px 16px;
-            font-size: 12.5px;
-            color: var(--ink2);
-            line-height: 1.55;
-            margin-bottom: 14px;
-        }
-
-        .acc-restricted-note strong {
-            color: var(--gold);
-        }
-
-        /* ── SETTINGS ── */
-        .settings-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            padding: 20px;
-            max-width: 480px;
-        }
-
-        .settings-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--surface2);
-        }
-
-        .settings-row:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-
-        .settings-row:first-child {
-            padding-top: 0;
-        }
-
-        .settings-label {
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .settings-sub {
-            font-size: 11px;
-            color: var(--ink3);
-            margin-top: 2px;
-        }
-
-        .toggle {
-            width: 38px;
-            height: 22px;
-            border-radius: 99px;
-            background: var(--border);
-            position: relative;
-            cursor: pointer;
-            flex-shrink: 0;
-        }
-
-        .toggle.on {
-            background: var(--forest2);
-        }
-
-        .toggle-knob {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: #fff;
-            position: absolute;
-            top: 3px;
-            left: 3px;
-            transition: left .18s;
-        }
-
-        .toggle.on .toggle-knob {
-            left: 19px;
-        }
-
-        .toast-wrap {
-            position: fixed;
-            bottom: 22px;
-            right: 22px;
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .toast {
-            padding: 11px 16px;
-            border-radius: 9px;
-            font-size: 13px;
-            font-weight: 500;
-            color: #fff;
-            box-shadow: var(--shadow-lg);
-            animation: toastIn .3s ease, toastOut .3s ease 2.7s forwards;
-        }
-
-        .toast.success {
-            background: var(--vlow);
-        }
-
-        .toast.info {
-            background: var(--forest);
-        }
-
-        @keyframes toastIn {
-            from {
-                opacity: 0;
-                transform: translateX(20px)
-            }
-
-            to {
-                opacity: 1;
-                transform: none
-            }
-        }
-
-        @keyframes toastOut {
-            to {
-                opacity: 0;
-                transform: translateX(20px)
-            }
-        }
-
-        @media(max-width:900px) {
-            .stat-row {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .dash-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media(max-width:768px) {
-            .menu-toggle {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-
-            .sidebar {
-                position: fixed;
-                top: 0;
-                left: 0;
-                bottom: 0;
-                transform: translateX(-100%);
-                box-shadow: 6px 0 30px rgba(0, 0, 0, 0.2);
-            }
-
-            .sidebar.active {
-                transform: translateX(0);
-            }
-
-            .topbar {
-                padding-left: 56px;
-            }
-
-            .stat-row {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            .view {
-                padding: 14px;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>ComBaTy — Community-Based Poverty Mapping with Regression Analysis | Manolo Fortich, Bukidnon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+:root{--forest:#0d3b1e;--forest2:#1f6b34;--forest-dim:rgba(31,107,52,.1);--gold:#b9862f;--gold-dim:rgba(185,134,47,.12);--bg:#f5f4ee;--surface:#fff;--surface2:#eef0e7;--border:#e0ddd0;--ink:#16201a;--ink2:#5c6a5e;--ink3:#93a294;--high:#a4322a;--high-dim:rgba(164,50,42,.1);--mod:#c76b1f;--mod-dim:rgba(199,107,31,.1);--low:#c9a227;--low-dim:rgba(201,162,39,.12);--vlow:#2f7d3c;--vlow-dim:rgba(47,125,60,.1);--radius:16px;--radius-sm:10px;--shadow:0 2px 14px rgba(13,59,30,.07);--shadow-lg:0 10px 36px rgba(13,59,30,.14);--nav-w:250px}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink)}
+.display{font-family:'Spectral',serif}.mono{font-family:'JetBrains Mono',monospace}
+
+/* LOGIN */
+#login-screen{position:fixed;inset:0;z-index:2000;background:radial-gradient(circle at 18% 20%,rgba(255,255,255,.05),transparent 40%),linear-gradient(160deg,#0a2412 0%,#0d3b1e 55%,#123f22 100%);display:flex;align-items:center;justify-content:center;padding:24px}
+.login-card{width:100%;max-width:380px;background:var(--surface);border-radius:20px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.35);animation:cardIn .5s cubic-bezier(.2,.8,.2,1)}
+@keyframes cardIn{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}
+.login-head{background:linear-gradient(135deg,var(--forest),#123f22);padding:30px 30px 22px;text-align:center;color:#fff;position:relative;overflow:hidden}
+.login-head::after{content:'';position:absolute;right:-40px;top:-40px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.06)}
+.login-seal{width:50px;height:50px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:23px;margin:0 auto 12px;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.login-title{font-family:'Spectral',serif;font-size:21px;font-weight:700;letter-spacing:-.2px}
+.login-sub{font-size:12px;opacity:.75;margin-top:4px;letter-spacing:.3px}
+.login-body{padding:24px 28px 26px}
+.lf-group{margin-bottom:14px}.lf-group:last-of-type{margin-bottom:0}
+.lf-label{font-size:11px;font-weight:600;color:var(--ink2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;display:block}
+.lf-input{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:9px;font-family:'Inter',sans-serif;font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s;background:var(--surface2)}
+.lf-input:focus{border-color:var(--forest2);box-shadow:0 0 0 3px var(--forest-dim);background:#fff}
+.lf-btn{width:100%;margin-top:16px;padding:12px;background:var(--forest);color:#fff;border:none;border-radius:9px;font-size:16px;font-weight:700;letter-spacing:.2px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.lf-btn:hover{background:var(--forest2);transform:translateY(-1px);box-shadow:0 6px 18px rgba(31,107,52,.3)}
+.lf-hint{text-align:center;font-size:11px;color:var(--ink3);margin-top:14px;line-height:1.55}
+.lf-error{display:none;background:var(--high-dim);color:var(--high);font-size:12px;font-weight:500;padding:9px 12px;border-radius:8px;margin-bottom:14px}
+.lf-error.show{display:block}
+.pw-wrap{position:relative}
+.pw-wrap .lf-input{padding-right:44px}
+.pw-toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:17px;padding:4px;line-height:1}
+
+/* ICON BUTTONS */
+.icon-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;border:none;cursor:pointer;font-size:15px;line-height:1;transition:all .15s;flex-shrink:0}
+.icon-btn+.icon-btn{margin-left:6px}
+.icon-btn.primary{background:var(--forest);color:#fff}.icon-btn.primary:hover{background:var(--forest2);transform:translateY(-1px)}
+.icon-btn.outline{background:var(--surface);border:1.5px solid var(--border);color:var(--ink2)}.icon-btn.outline:hover{background:var(--surface2);color:var(--ink)}
+.icon-btn.danger{background:var(--high-dim);color:var(--high)}.icon-btn.danger:hover{background:var(--high);color:#fff}
+.icon-btn.success{background:var(--vlow);color:#fff}.icon-btn.success:hover{filter:brightness(1.08)}
+.icon-btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+
+/* APP SHELL */
+.app{display:none;height:100dvh;overflow:hidden}.app.active{display:flex}
+.sidebar{width:var(--nav-w);background:var(--forest);color:#eaf1ea;display:flex;flex-direction:column;flex-shrink:0;transition:transform .3s ease;z-index:1200}
+.sb-head{padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,.1);display:flex;gap:11px;align-items:center}
+.sb-seal{width:38px;height:38px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.sb-title{font-family:'Spectral',serif;font-size:14.5px;font-weight:700;line-height:1.25}
+.sb-sub{font-size:10px;opacity:.65;margin-top:2px;letter-spacing:.4px}
+.sb-nav{flex:1;padding:10px 12px;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+.sb-link{display:flex;align-items:center;justify-content:flex-start;gap:12px;padding:11px 13px;border-radius:9px;border:none;background:none;color:rgba(234,241,234,.72);font-family:'Inter',sans-serif;font-size:13.5px;font-weight:500;text-align:left;cursor:pointer;width:100%;transition:all .15s}
+.sb-link:hover{background:rgba(255,255,255,.06);color:#fff}
+.sb-link.active{background:var(--gold);color:#1c1204;font-weight:700}
+.sb-icon{font-size:19px;width:20px;text-align:center;flex-shrink:0}
+.sb-label{white-space:nowrap}
+.sb-foot{padding:12px 20px;border-top:1px solid rgba(255,255,255,.1);font-size:10.5px;color:rgba(234,241,234,.55);line-height:1.5}
+.sb-user{display:flex;align-items:center;gap:9px;padding:12px 20px;border-top:1px solid rgba(255,255,255,.1)}
+.sb-avatar{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.sb-uname{font-size:12.5px;font-weight:600;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sb-urole{font-size:10px;opacity:.6}
+.sb-logout{margin-left:auto;background:none;border:none;color:rgba(234,241,234,.6);cursor:pointer;font-size:14px}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 26px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-title{font-family:'Spectral',serif;font-size:20px;font-weight:700}
+.topbar-sub{font-size:12px;color:var(--ink3);margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.topbar-chip{font-size:11px;font-weight:600;padding:5px 11px;border-radius:99px;background:var(--forest-dim);color:var(--forest2)}
+.menu-toggle{display:none;position:fixed;top:12px;left:12px;z-index:1100;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:16px;cursor:pointer}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1150}.overlay.active{display:block}
+.view{display:none;flex:1;overflow-y:auto;padding:20px 26px 24px;animation:fadeUp .25s ease}.view.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* DASHBOARD */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr) 1.3fr;gap:12px;margin-bottom:16px}
+.stat-card{border-radius:var(--radius-sm);padding:15px 17px;color:#fff;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.stat-card::after{content:'';position:absolute;right:-18px;bottom:-18px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.08)}
+.stat-card.high{background:linear-gradient(135deg,var(--high),#7d211b)}
+.stat-card.mod{background:linear-gradient(135deg,var(--mod),#96501a)}
+.stat-card.low{background:linear-gradient(135deg,var(--low),#9c7c1c)}
+.stat-card.vlow{background:linear-gradient(135deg,var(--vlow),#1f5a29)}
+.stat-label{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;opacity:.85}
+.stat-num{font-family:'Spectral',serif;font-size:30px;font-weight:700;margin-top:4px}
+.stat-foot{font-size:10.5px;opacity:.8;margin-top:2px}
+.gauge-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:var(--shadow);padding:13px 17px;display:flex;align-items:center;gap:13px}
+.gauge-info-label{font-size:10.5px;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.5px}
+.gauge-info-sub{font-size:10.5px;color:var(--ink3);margin-top:2px}
+.gauge-info-num{font-family:'Spectral',serif;font-size:22px;font-weight:700;color:var(--forest);margin-top:1px}
+
+.dash-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:14px}
+.panel-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.panel-box+.panel-box{margin-top:14px}
+.panel-box-head{padding:13px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.panel-box-title{font-family:'Spectral',serif;font-size:14.5px;font-weight:700}
+.panel-box-sub{font-size:11px;color:var(--ink3);margin-top:1px}
+.panel-box-body{padding:14px 18px;overflow-x:auto}
+#dash-map{height:380px;min-height:320px;width:100%;position:relative}
+.rank-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.rank-table th{text-align:left;padding:7px 6px;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--ink3);border-bottom:1.5px solid var(--border)}
+.rank-table td{padding:8px 6px;border-bottom:1px solid var(--surface2)}
+.rank-table td,.rank-table th{white-space:nowrap}
+.rank-table tr:last-child td{border-bottom:none}
+.rank-num{width:22px;height:22px;border-radius:6px;background:var(--forest-dim);color:var(--forest2);font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:center}
+.lvl-pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:10.5px;font-weight:700}
+.lvl-pill.high{background:var(--high-dim);color:var(--high)}
+.lvl-pill.mod{background:var(--mod-dim);color:var(--mod)}
+.lvl-pill.low{background:var(--low-dim);color:#8a6f18}
+.lvl-pill.vlow{background:var(--vlow-dim);color:var(--vlow)}
+.update-item{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--surface2);font-size:12px}
+.update-item:last-child{border-bottom:none;padding-bottom:0}
+.update-item:first-child{padding-top:0}
+.update-dot{width:7px;height:7px;border-radius:50%;background:var(--gold);margin-top:5px;flex-shrink:0}
+.update-text{color:var(--ink)}
+.update-time{color:var(--ink3);font-size:10.5px;margin-top:2px}
+
+/* LEAFLET MAP */
+#view-map-view.active{display:flex;flex-direction:column;padding:0}
+#panel-map-view{flex:1;display:flex;flex-direction:column;min-height:0}
+.map-view-wrap{flex:1;position:relative;min-height:420px}
+#full-map{position:absolute;inset:0}
+#dash-map,#full-map{background:#e8e4dc;z-index:1}
+.leaflet-container{font-family:'Inter',sans-serif}
+.leaflet-popup-content-wrapper{border-radius:10px!important;box-shadow:var(--shadow-lg)!important}
+.leaflet-popup-content{font-size:12.5px!important;line-height:1.5}
+.map-legend{position:absolute;bottom:18px;left:18px;z-index:1000;background:var(--surface);border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);padding:13px 15px;font-size:12px;min-width:180px}
+.map-legend-title{font-weight:700;font-size:11.5px;margin-bottom:7px;color:var(--ink)}
+.leg-row{display:flex;align-items:center;gap:8px;padding:3px 0;color:var(--ink2)}
+.leg-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+.bgy-label{background:rgba(255,255,255,.96);border:1px solid var(--border);box-shadow:var(--shadow);font-weight:600;font-size:11px;padding:3px 7px;color:var(--ink);white-space:nowrap;border-radius:6px}
+.bgy-label::before{display:none}
+.poverty-pin{background:transparent;border:0}
+.poverty-pin svg{display:block;filter:drop-shadow(0 2px 2px rgba(0,0,0,.28))}
+.map-tile-error{position:absolute;top:12px;right:12px;z-index:800;background:#fff7ed;color:#9a3412;border:1px solid #fdba74;padding:8px 10px;border-radius:8px;font-size:12px;max-width:260px;display:none}
+
+/* TABLES */
+.data-toolbar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.search-input{flex:1;min-width:200px;padding:10px 14px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;outline:none;background:var(--surface)}
+.search-input:focus{border-color:var(--forest2)}
+.filter-select{padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;background:var(--surface);cursor:pointer}
+.data-table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.data-table-wrap+.data-table-wrap{margin-top:14px}
+.data-table{width:100%;border-collapse:collapse;font-size:13px}
+.data-table th{background:var(--forest);color:#fff;text-align:left;padding:11px 16px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.data-table td{padding:11px 16px;border-bottom:1px solid var(--surface2)}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:var(--surface2)}
+.bar-track{width:80px;height:6px;background:var(--surface2);border-radius:99px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:8px}
+.bar-fill{height:100%;border-radius:99px}
+.muted-cell{color:var(--ink3)}
+.table-scroll{overflow-x:auto}
+
+/* POVERTY DATA */
+.pd-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
+.pd-grid .panel-box+.panel-box{margin-top:0}
+.pd-grid .data-table th,.pd-grid .data-table td{padding:10px 10px}
+.bg-line1{display:flex;align-items:center;gap:8px;font-size:13.5px}
+.bg-line2{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.bg-tag{font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:99px;background:var(--surface2);color:var(--ink2);border:1px solid var(--border)}
+.bg-tag b{color:var(--ink);font-weight:700}
+
+/* FORMS */
+.record-form{padding:15px 18px;border-bottom:1px solid var(--border);background:var(--surface2)}
+.record-form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:12px}
+.record-form-actions{display:flex;align-items:center}
+
+/* REPORTS */
+.report-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.rep-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:18px;box-shadow:var(--shadow);cursor:pointer;transition:all .18s}
+.rep-card:hover{border-color:var(--forest2);transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.rep-icon{font-size:22px;margin-bottom:9px}
+.rep-title{font-weight:700;font-size:13.5px;margin-bottom:4px}
+.rep-desc{font-size:11.5px;color:var(--ink3);line-height:1.5}
+
+/* USERS */
+.acc-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;max-width:520px;margin-bottom:14px}
+.acc-restricted-note{background:var(--gold-dim);border:1px solid var(--gold);border-radius:var(--radius-sm);padding:12px 16px;font-size:12.5px;color:var(--ink2);line-height:1.55;margin-bottom:14px}
+.acc-restricted-note strong{color:var(--gold)}
+
+/* SETTINGS */
+.settings-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;max-width:480px}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--surface2)}
+.settings-row:last-child{border-bottom:none;padding-bottom:0}
+.settings-row:first-child{padding-top:0}
+.settings-label{font-size:13px;font-weight:600}
+.settings-sub{font-size:11px;color:var(--ink3);margin-top:2px}
+.toggle{width:38px;height:22px;border-radius:99px;background:var(--border);position:relative;cursor:pointer;flex-shrink:0}
+.toggle.on{background:var(--forest2)}
+.toggle-knob{width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:3px;left:3px;transition:left .18s}
+.toggle.on .toggle-knob{left:19px}
+
+/* TOAST */
+.toast-wrap{position:fixed;bottom:22px;right:22px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{padding:11px 16px;border-radius:9px;font-size:13px;font-weight:500;color:#fff;box-shadow:var(--shadow-lg);animation:toastIn .3s ease,toastOut .3s ease 2.7s forwards}
+.toast.success{background:var(--vlow)}.toast.info{background:var(--forest)}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+@keyframes toastOut{to{opacity:0;transform:translateX(20px)}}
+
+@media(max-width:1100px){.pd-grid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:900px){.stat-row{grid-template-columns:repeat(2,1fr)}.dash-grid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:768px){
+.menu-toggle{display:flex;align-items:center;justify-content:center}
+.sidebar{position:fixed;top:0;left:0;bottom:0;transform:translateX(-100%);box-shadow:6px 0 30px rgba(0,0,0,.2)}
+.sidebar.active{transform:translateX(0)}
+.topbar{padding-left:56px}
+.stat-row{grid-template-columns:1fr 1fr}
+.view{padding:14px}
+}
+</style>
 </head>
 
 <body>
 
-    <!-- ══════════ LOGIN ══════════ -->
-    <div id="login-screen">
-        <div class="login-card">
-            <div class="login-head">
-                <div class="login-seal">📖</div>
-                <div class="login-title">ComBaTy</div>
-                <div class="login-sub">Community-Based Poverty Mapping · Manolo Fortich, Bukidnon</div>
-            </div>
-            <div class="login-body">
-                <div class="lf-error" id="login-error">Please enter both a username and password.</div>
-                <div class="lf-group">
-                    <label class="lf-label">Username</label>
-                    <input class="lf-input" id="login-user" placeholder="Enter your username">
-                </div>
-                <div class="lf-group">
-                    <label class="lf-label">Password</label>
-                    <input class="lf-input" type="password" id="login-pass" placeholder="Enter your password">
-                </div>
-                <button class="lf-btn" onclick="doLogin()">Log In</button>
-                <div class="lf-hint">Community-Based Poverty Mapping with Smart Analytics<br>LGU of Manolo Fortich ·
-                    Admin (MSWDO) · LGU Staff · Barangay accounts</div>
-            </div>
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-head">
+      <div class="login-seal">📖</div>
+      <div class="login-title">ComBaTy</div>
+      <div class="login-sub">Community-Based Poverty Mapping · Manolo Fortich, Bukidnon</div>
+    </div>
+    <div class="login-body">
+      <div class="lf-error" id="login-error">Please enter both a username and password.</div>
+      <div class="lf-group"><label class="lf-label">Username</label><input class="lf-input" id="login-user" placeholder="Enter your username"></div>
+      <div class="lf-group"><label class="lf-label">Password</label>
+        <div class="pw-wrap">
+          <input class="lf-input" type="password" id="login-pass" placeholder="Enter your password">
+          <button type="button" class="pw-toggle" id="pw-toggle" onclick="togglePassword()" aria-label="Show password">👁</button>
         </div>
+      </div>
+      <button class="lf-btn" onclick="doLogin()">Log In</button>
+      <div class="lf-hint">Community-Based Poverty Mapping with Smart Analytics<br>LGU of Manolo Fortich · Authorized personnel only</div>
+    </div>
+  </div>
+</div>
+
+<!-- APP SHELL -->
+<button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<div class="app" id="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-head">
+      <div class="sb-seal">🌾</div>
+      <div><div class="sb-title">ComBaTy</div><div class="sb-sub">MANOLO FORTICH, BUKIDNON</div></div>
+    </div>
+    <nav class="sb-nav">
+      <button class="sb-link active" data-view="dashboard" onclick="showView('dashboard')"><span class="sb-icon">🏠</span><span class="sb-label">Dashboard</span></button>
+      <button class="sb-link" data-view="barangays" onclick="showView('barangays')"><span class="sb-icon">📍</span><span class="sb-label">Barangays</span></button>
+      <button class="sb-link" data-view="poverty-data" onclick="showView('poverty-data')"><span class="sb-icon">📊</span><span class="sb-label">Poverty Data</span></button>
+      <button class="sb-link" data-view="map-view" onclick="showView('map-view')"><span class="sb-icon">🗺️</span><span class="sb-label">Map View</span></button>
+      <button class="sb-link" data-view="reports" onclick="showView('reports')"><span class="sb-icon">📄</span><span class="sb-label">Reports</span></button>
+      <button class="sb-link" data-view="users" onclick="showView('users')"><span class="sb-icon">👥</span><span class="sb-label">Users</span></button>
+      <button class="sb-link" data-view="settings" onclick="showView('settings')"><span class="sb-icon">⚙️</span><span class="sb-label">Settings</span></button>
+    </nav>
+    <div class="sb-user">
+      <div class="sb-avatar">🧑‍💼</div>
+      <div><div class="sb-uname" id="sb-username">Admin</div><div class="sb-urole" id="sb-userrole">Administrator</div></div>
+      <button class="sb-logout" onclick="doLogout()" title="Log out" aria-label="Log out">⏻</button>
+    </div>
+    <div class="sb-foot">Community-Based Poverty Mapping<br>with Smart Analytics · v1.0</div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div><div class="topbar-title" id="topbar-title">Dashboard</div><div class="topbar-sub" id="topbar-sub">Municipal poverty overview</div></div>
+      <div class="topbar-right"><span class="topbar-chip" id="topbar-chip">5 Barangays Tracked</span></div>
     </div>
 
-    <!-- ══════════ APP SHELL ══════════ -->
-    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
-    <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+    <!-- DASHBOARD -->
+    <div class="view active" id="view-dashboard">
+      <div class="stat-row">
+        <div class="stat-card high"><div class="stat-label">High Poverty Barangays</div><div class="stat-num" id="stat-high">0</div><div class="stat-foot">36% and above</div></div>
+        <div class="stat-card mod"><div class="stat-label">Moderate Poverty Barangays</div><div class="stat-num" id="stat-mod">0</div><div class="stat-foot">21% – 35%</div></div>
+        <div class="stat-card low"><div class="stat-label">Low Poverty Barangays</div><div class="stat-num" id="stat-low">0</div><div class="stat-foot">11% – 20%</div></div>
+        <div class="stat-card vlow"><div class="stat-label">Very Low Poverty Barangays</div><div class="stat-num" id="stat-vlow">0</div><div class="stat-foot">0% – 10%</div></div>
+        <div class="gauge-card">
+          <svg width="58" height="58" viewBox="0 0 58 58">
+            <circle cx="29" cy="29" r="24" fill="none" stroke="#eef0e7" stroke-width="7"/>
+            <circle id="gauge-ring" cx="29" cy="29" r="24" fill="none" stroke="#b9862f" stroke-width="7" stroke-dasharray="150.8" stroke-dashoffset="150.8" stroke-linecap="round" transform="rotate(-90 29 29)"/>
+          </svg>
+          <div>
+            <div class="gauge-info-label">Overall Incidence</div>
+            <div class="gauge-info-num" id="gauge-num">0.00%</div>
+            <div class="gauge-info-sub">Average across tracked barangays</div>
+          </div>
+        </div>
+      </div>
 
-    <div class="app" id="app">
-        <aside class="sidebar" id="sidebar">
-            <div class="sb-head">
-                <div class="sb-seal">🌾</div>
-                <div>
-                    <div class="sb-title">ComBaTy</div>
-                    <div class="sb-sub">MANOLO FORTICH, BUKIDNON</div>
-                </div>
+      <div class="dash-grid">
+        <div class="panel-box">
+          <div class="panel-box-head"><div><div class="panel-box-title">Barangay Poverty Map</div><div class="panel-box-sub">Classification by poverty incidence</div></div></div>
+          <div id="dash-map"></div>
+        </div>
+        <div>
+          <div class="panel-box">
+            <div class="panel-box-head"><div class="panel-box-title" id="top5-title">Top 5 High Poverty Barangays</div></div>
+            <div class="panel-box-body">
+              <table class="rank-table">
+                <thead><tr><th>Rank</th><th>Barangay</th><th>Level</th><th>Poverty %</th></tr></thead>
+                <tbody id="top5-body"></tbody>
+              </table>
             </div>
-            <nav class="sb-nav">
-                <button class="sb-link active" data-view="dashboard" onclick="showView('dashboard')"
-                    title="Dashboard" aria-label="Dashboard"><span class="sb-icon">🏠</span></button>
-                <button class="sb-link" data-view="barangays" onclick="showView('barangays')" title="Barangays"
-                    aria-label="Barangays"><span class="sb-icon">📍</span></button>
-                <button class="sb-link" data-view="poverty-data" onclick="showView('poverty-data')"
-                    title="Poverty Data" aria-label="Poverty Data"><span class="sb-icon">📊</span></button>
-                <button class="sb-link" data-view="map-view" onclick="showView('map-view')" title="Map View"
-                    aria-label="Map View"><span class="sb-icon">🗺️</span></button>
-                <button class="sb-link" data-view="reports" onclick="showView('reports')" title="Reports"
-                    aria-label="Reports"><span class="sb-icon">📄</span></button>
-                <button class="sb-link" data-view="users" onclick="showView('users')" title="Users"
-                    aria-label="Users"><span class="sb-icon">👥</span></button>
-                <button class="sb-link" data-view="settings" onclick="showView('settings')" title="Settings"
-                    aria-label="Settings"><span class="sb-icon">⚙️</span></button>
-            </nav>
-            <div class="sb-user">
-                <div class="sb-avatar">🧑‍💼</div>
-                <div>
-                    <div class="sb-uname" id="sb-username">Admin</div>
-                    <div class="sb-urole" id="sb-userrole">Administrator</div>
-                </div>
-                <button class="sb-logout" onclick="doLogout()" title="Log out" aria-label="Log out">⏻</button>
-            </div>
-            <div class="sb-foot">Community-Based Poverty Mapping<br>with Smart Analytics · v1.0</div>
-        </aside>
-
-        <main class="main">
-            <div class="topbar">
-                <div>
-                    <div class="topbar-title" id="topbar-title">Dashboard</div>
-                    <div class="topbar-sub" id="topbar-sub">Municipal poverty overview</div>
-                </div>
-                <div class="topbar-right">
-                    <span class="topbar-chip" id="topbar-chip">5 Barangays Tracked</span>
-                </div>
-            </div>
-
-            <!-- ── DASHBOARD ── -->
-            <div class="view active" id="view-dashboard">
-                <div class="stat-row">
-                    <div class="stat-card high">
-                        <div class="stat-label">High Poverty Barangays</div>
-                        <div class="stat-num" id="stat-high">0</div>
-                        <div class="stat-foot">36% and above</div>
-                    </div>
-                    <div class="stat-card mod">
-                        <div class="stat-label">Moderate Poverty Barangays</div>
-                        <div class="stat-num" id="stat-mod">0</div>
-                        <div class="stat-foot">21% – 35%</div>
-                    </div>
-                    <div class="stat-card low">
-                        <div class="stat-label">Low Poverty Barangays</div>
-                        <div class="stat-num" id="stat-low">0</div>
-                        <div class="stat-foot">11% – 20%</div>
-                    </div>
-                    <div class="stat-card vlow">
-                        <div class="stat-label">Very Low Poverty Barangays</div>
-                        <div class="stat-num" id="stat-vlow">0</div>
-                        <div class="stat-foot">0% – 10%</div>
-                    </div>
-                    <div class="gauge-card">
-                        <svg width="58" height="58" viewBox="0 0 58 58">
-                            <circle cx="29" cy="29" r="24" fill="none" stroke="#eef0e7" stroke-width="7" />
-                            <circle id="gauge-ring" cx="29" cy="29" r="24" fill="none" stroke="#b9862f" stroke-width="7"
-                                stroke-dasharray="150.8" stroke-dashoffset="150.8" stroke-linecap="round"
-                                transform="rotate(-90 29 29)" />
-                        </svg>
-                        <div>
-                            <div class="gauge-info-label">Overall Incidence</div>
-                            <div class="gauge-info-num" id="gauge-num">0.00%</div>
-                            <div class="gauge-info-sub">Average across tracked barangays</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="dash-grid">
-                    <div class="panel-box">
-                        <div class="panel-box-head">
-                            <div>
-                                <div class="panel-box-title">Barangay Poverty Map</div>
-                                <div class="panel-box-sub">Classification by poverty incidence</div>
-                            </div>
-                        </div>
-                        <div id="dash-map"></div>
-                    </div>
-
-                    <div>
-                        <div class="panel-box">
-                            <div class="panel-box-head">
-                                <div class="panel-box-title" id="top5-title">Top 5 High Poverty Barangays</div>
-                            </div>
-                            <div class="panel-box-body">
-                                <table class="rank-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Rank</th>
-                                            <th>Barangay</th>
-                                            <th>Level</th>
-                                            <th>Poverty %</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="top5-body"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                        <div class="panel-box">
-                            <div class="panel-box-head">
-                                <div class="panel-box-title">Recent Updates</div>
-                            </div>
-                            <div class="panel-box-body" id="updates-body"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ── BARANGAYS ── -->
-            <div class="view" id="view-barangays">
-                <div class="data-toolbar">
-                    <input class="search-input" id="bgy-search" placeholder="Search barangay..."
-                        oninput="renderBarangays()">
-                    <select class="filter-select" id="bgy-filter" onchange="renderBarangays()">
-                        <option value="">All levels</option>
-                        <option value="High">High</option>
-                        <option value="Moderate">Moderate</option>
-                        <option value="Low">Low</option>
-                        <option value="Very Low">Very Low</option>
-                    </select>
-                </div>
-                <div class="data-table-wrap">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Barangay</th>
-                                <th>Households Surveyed</th>
-                                <th>Poverty Level</th>
-                                <th>Poverty Incidence</th>
-                            </tr>
-                        </thead>
-                        <tbody id="bgy-table-body"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- ── POVERTY DATA ── -->
-            <div class="view" id="view-poverty-data">
-                <div class="pd-grid">
-
-                    <!-- LEFT: Historical Trend Records -->
-                    <div class="panel-box">
-                        <div class="panel-box-head">
-                            <div>
-                                <div class="panel-box-title">Historical Trend Records</div>
-                                <div class="panel-box-sub">Poor household magnitude and proportion by year, per
-                                    barangay</div>
-                            </div>
-                            <button class="icon-btn primary" onclick="toggleRecordForm()" title="Add record"
-                                aria-label="Add record">➕</button>
-                        </div>
-
-                        <div class="record-form" id="record-form-card" style="display:none;">
-                            <div class="record-form-grid">
-                                <div>
-                                    <label class="lf-label">Barangay</label>
-                                    <select class="filter-select" id="rec-barangay" style="width:100%;"></select>
-                                </div>
-                                <div>
-                                    <label class="lf-label">Year</label>
-                                    <select class="filter-select" id="rec-year" style="width:100%;">
-                                        <option value="2019">2019</option>
-                                        <option value="2021">2021</option>
-                                        <option value="2023">2023</option>
-                                        <option value="2025" selected>2025</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="lf-label">No. of Households</label>
-                                    <input class="lf-input" type="number" min="0" id="rec-hh" placeholder="e.g. 300"
-                                        oninput="autoCalcProportion()">
-                                </div>
-                                <div>
-                                    <label class="lf-label">Poor HH Magnitude</label>
-                                    <input class="lf-input" type="number" min="0" id="rec-mag" placeholder="e.g. 250"
-                                        oninput="autoCalcProportion()">
-                                </div>
-                                <div>
-                                    <label class="lf-label">Poor HH Proportion (%)</label>
-                                    <input class="lf-input" type="number" min="0" max="100" step="0.01" id="rec-pct"
-                                        placeholder="Auto-calculated">
-                                </div>
-                            </div>
-                            <div class="record-form-actions">
-                                <button class="icon-btn primary" onclick="saveRecord()" title="Save record"
-                                    aria-label="Save record">💾</button>
-                                <button class="icon-btn outline" onclick="toggleRecordForm()" title="Cancel"
-                                    aria-label="Cancel">✖</button>
-                            </div>
-                        </div>
-
-                        <div class="panel-box-body table-scroll">
-                            <table class="data-table" style="box-shadow:none;">
-                                <thead>
-                                    <tr>
-                                        <th>Barangay</th>
-                                        <th>Year</th>
-                                        <th>No. of HH</th>
-                                        <th>Poor HH Mag.</th>
-                                        <th>Poor HH %</th>
-                                        <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="record-table-body"></tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- RIGHT: Household Indicators -->
-                    <div class="panel-box">
-                        <div class="panel-box-head">
-                            <div>
-                                <div class="panel-box-title">Household Indicators</div>
-                                <div class="panel-box-sub">Income, occupation & education by barangay</div>
-                            </div>
-                            <button class="icon-btn primary" onclick="toggleBarangayForm()" title="Add barangay"
-                                aria-label="Add barangay">➕</button>
-                        </div>
-
-                        <div class="record-form" id="barangay-form-card" style="display:none;">
-                            <div class="record-form-grid">
-                                <div>
-                                    <label class="lf-label">Barangay Name</label>
-                                    <input class="lf-input" id="bg-name" placeholder="e.g. Alae">
-                                </div>
-                                <div>
-                                    <label class="lf-label">Poverty Level</label>
-                                    <select class="filter-select" id="bg-level" style="width:100%;">
-                                        <option value="High">High</option>
-                                        <option value="Moderate" selected>Moderate</option>
-                                        <option value="Low">Low</option>
-                                        <option value="Very Low">Very Low</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="lf-label">Poverty Incidence (%)</label>
-                                    <input class="lf-input" type="number" min="0" max="100" step="0.01" id="bg-pct"
-                                        placeholder="e.g. 24.50">
-                                </div>
-                                <div>
-                                    <label class="lf-label">Households Surveyed</label>
-                                    <input class="lf-input" type="number" min="0" id="bg-hh" placeholder="e.g. 400">
-                                </div>
-                                <div>
-                                    <label class="lf-label">Income</label>
-                                    <select class="filter-select" id="bg-income" style="width:100%;">
-                                        <option value="Low">Low</option>
-                                        <option value="Moderate">Moderate</option>
-                                        <option value="High">High</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="lf-label">Housing Condition</label>
-                                    <select class="filter-select" id="bg-housing" style="width:100%;">
-                                        <option value="Poor">Poor</option>
-                                        <option value="Fair">Fair</option>
-                                        <option value="Good">Good</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="lf-label">Access to Basic Services</label>
-                                    <select class="filter-select" id="bg-services" style="width:100%;">
-                                        <option value="Limited">Limited</option>
-                                        <option value="Moderate">Moderate</option>
-                                        <option value="Full">Full</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="lf-label">Latitude</label>
-                                    <input class="lf-input" type="number" step="0.0001" id="bg-lat"
-                                        placeholder="e.g. 8.3745">
-                                </div>
-                                <div>
-                                    <label class="lf-label">Longitude</label>
-                                    <input class="lf-input" type="number" step="0.0001" id="bg-lng"
-                                        placeholder="e.g. 124.8467">
-                                </div>
-                            </div>
-                            <div class="record-form-actions">
-                                <button class="icon-btn primary" onclick="saveBarangay()" title="Save barangay"
-                                    aria-label="Save barangay">💾</button>
-                                <button class="icon-btn outline" onclick="toggleBarangayForm()" title="Cancel"
-                                    aria-label="Cancel">✖</button>
-                            </div>
-                        </div>
-
-                        <div class="panel-box-body" style="padding-bottom:0;">
-                            <div
-                                style="background:var(--gold-dim); border:1px solid var(--gold); border-radius:var(--radius-sm); padding:10px 14px; font-size:11.5px; color:var(--ink2); line-height:1.5; margin-bottom:12px;">
-                                <strong style="color:var(--gold);">Classification basis:</strong> the ML model uses
-                                income, occupation, and educational attainment as primary indicators, plus household
-                                size, housing condition, and access to services. Figures shown are illustrative for
-                                the <span id="pd-banner-count">5</span> tracked barangays.
-                            </div>
-                            <input class="search-input" id="pd-search" placeholder="Search barangay..."
-                                oninput="renderPovertyData()" style="width:100%; margin-bottom:12px;">
-                        </div>
-
-                        <div class="table-scroll">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Barangay</th>
-                                        <th>Income</th>
-                                        <th>Occupation</th>
-                                        <th>Education</th>
-                                        <th>Housing</th>
-                                        <th>Services</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="pd-table-body"></tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-
-            <!-- ── MAP VIEW ── -->
-            <div class="view" id="view-map-view" style="padding:0;">
-                <div id="panel-map-view">
-                    <div class="map-view-wrap">
-                        <div id="full-map"></div>
-                        <div class="map-legend">
-                            <div class="map-legend-title">Poverty Classification</div>
-                            <div class="leg-row"><span class="leg-dot" style="background:var(--high)"></span>High (36%+)
-                            </div>
-                            <div class="leg-row"><span class="leg-dot" style="background:var(--mod)"></span>Moderate
-                                (21–35%)</div>
-                            <div class="leg-row"><span class="leg-dot" style="background:var(--low)"></span>Low (11–20%)
-                            </div>
-                            <div class="leg-row"><span class="leg-dot" style="background:var(--vlow)"></span>Very Low
-                                (0–10%)</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ── REPORTS ── -->
-            <div class="view" id="view-reports">
-                <div class="report-cards">
-                    <div class="rep-card" onclick="toast('Generating municipal summary report…')">
-                        <div class="rep-icon">📈</div>
-                        <div class="rep-title">Municipal Poverty Summary</div>
-                        <div class="rep-desc">Overview of poverty incidence across all tracked barangays.</div>
-                    </div>
-                    <div class="rep-card" onclick="toast('Generating barangay comparison report…')">
-                        <div class="rep-icon">📊</div>
-                        <div class="rep-title">Barangay Comparison</div>
-                        <div class="rep-desc">Side-by-side indicator breakdown for selected barangays.</div>
-                    </div>
-                    <div class="rep-card" onclick="toast('Generating trend analysis…')">
-                        <div class="rep-icon">📉</div>
-                        <div class="rep-title">Trend Analysis</div>
-                        <div class="rep-desc">Poverty indicator movement across survey periods.</div>
-                    </div>
-                    <div class="rep-card" onclick="toast('Generating pilot barangay report…')">
-                        <div class="rep-icon">🧭</div>
-                        <div class="rep-title">Pilot Coverage Report</div>
-                        <div class="rep-desc">Status of the pilot barangays under the ML classification model.</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ── USERS / ACCOUNTS ── -->
-            <div class="view" id="view-users">
-
-                <div id="acc-restricted-note" class="acc-restricted-note" style="display:none;">
-                    <strong>Restricted:</strong> only Administrator accounts can create, suspend, or remove accounts.
-                    You may still view the account list below.
-                </div>
-
-                <div id="acc-admin-tools" style="display:none;">
-                    <div class="data-toolbar">
-                        <button class="icon-btn primary" onclick="toggleCreateAccountForm()" title="Create account"
-                            aria-label="Create account">➕</button>
-                    </div>
-                    <div class="acc-card" id="create-account-card" style="display:none;">
-                        <div class="lf-group">
-                            <label class="lf-label">Username</label>
-                            <input class="lf-input" id="new-acc-username" placeholder="Enter username">
-                        </div>
-                        <div class="lf-group">
-                            <label class="lf-label">Password</label>
-                            <input class="lf-input" type="password" id="new-acc-password" placeholder="Enter password">
-                        </div>
-                        <div class="lf-group">
-                            <label class="lf-label">Role</label>
-                            <select class="filter-select" id="new-acc-role" style="width:100%;">
-                                <option value="LGU Staff">LGU Staff</option>
-                                <option value="Barangay">Barangay</option>
-                                <option value="Administrator">Administrator (MSWDO)</option>
-                            </select>
-                        </div>
-                        <div class="lf-group">
-                            <label class="lf-label">Assigned Barangay</label>
-                            <input class="lf-input" id="new-acc-barangay" placeholder="e.g. Municipal-wide">
-                        </div>
-                        <div style="display:flex; align-items:center; margin-top:4px;">
-                            <button class="icon-btn primary" onclick="createAccount()" title="Save account"
-                                aria-label="Save account">💾</button>
-                            <button class="icon-btn outline" onclick="toggleCreateAccountForm()" title="Cancel"
-                                aria-label="Cancel">✖</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="data-table-wrap">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Username</th>
-                                <th>Role</th>
-                                <th>Assigned Barangay</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="users-table-body"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- ── SETTINGS ── -->
-            <div class="view" id="view-settings">
-                <div class="settings-card">
-                    <div class="settings-row">
-                        <div>
-                            <div class="settings-label">Email notifications</div>
-                            <div class="settings-sub">Get notified when new survey data is submitted</div>
-                        </div>
-                        <div class="toggle on" onclick="this.classList.toggle('on')">
-                            <div class="toggle-knob"></div>
-                        </div>
-                    </div>
-                    <div class="settings-row">
-                        <div>
-                            <div class="settings-label">Auto-refresh dashboard</div>
-                            <div class="settings-sub">Refresh statistics every 5 minutes</div>
-                        </div>
-                        <div class="toggle" onclick="this.classList.toggle('on')">
-                            <div class="toggle-knob"></div>
-                        </div>
-                    </div>
-                    <div class="settings-row">
-                        <div>
-                            <div class="settings-label">Privacy-minimized view</div>
-                            <div class="settings-sub">Aggregate data at barangay/sitio level only</div>
-                        </div>
-                        <div class="toggle on" onclick="this.classList.toggle('on')">
-                            <div class="toggle-knob"></div>
-                        </div>
-                    </div>
-                    <div style="margin-top:16px; display:flex; align-items:center;">
-                        <button class="icon-btn primary" onclick="toast('Settings saved','success')" title="Save changes"
-                            aria-label="Save changes">💾</button>
-                        <button class="icon-btn outline" onclick="toast('Reverted to defaults')" title="Reset"
-                            aria-label="Reset">↺</button>
-                    </div>
-                </div>
-            </div>
-
-        </main>
+          </div>
+          <div class="panel-box">
+            <div class="panel-box-head"><div class="panel-box-title">Recent Updates</div></div>
+            <div class="panel-box-body" id="updates-body"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="toast-wrap" id="toast-wrap"></div>
+    <!-- BARANGAYS -->
+    <div class="view" id="view-barangays">
+      <div class="data-toolbar">
+        <input class="search-input" id="bgy-search" placeholder="Search barangay..." oninput="renderBarangays()">
+        <select class="filter-select" id="bgy-filter" onchange="renderBarangays()">
+          <option value="">All levels</option><option value="High">High</option><option value="Moderate">Moderate</option><option value="Low">Low</option><option value="Very Low">Very Low</option>
+        </select>
+      </div>
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr><th>Barangay</th><th>Households Surveyed</th><th>Poverty Level</th><th>Poverty Incidence</th><th></th></tr>
+          </thead>
+          <tbody id="bgy-table-body"></tbody>
+        </table>
+      </div>
+    </div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        // ── BARANGAY DATA ──
-        // The 5 pilot barangays classified as High poverty, plus 5 more real
-        // Manolo Fortich barangays (Alae, Damilag, Tankulan, Dahilayan, Agusan
-        // Canyon) added to round out the map with Moderate/Low/Very Low examples.
-        // Names and coordinates are real; poverty %, households, and indicator
-        // fields for these five are ILLUSTRATIVE placeholders — replace them with
-        // your actual survey figures using the Add Barangay form once you have them.
-        const BARANGAYS = [
-            { name: "Guilang-guilang", level: "High", pct: 84.82, hh: 412, pilot: true, lat: 8.3745, lng: 124.8467, income: "Low", services: "Limited", housing: "Poor" },
-            { name: "Santiago", level: "High", pct: 76.35, hh: 389, pilot: true, lat: 8.3512, lng: 124.8801, income: "Low", services: "Limited", housing: "Poor" },
-            { name: "Ticala", level: "High", pct: 55.6, hh: 131, pilot: true, lat: 8.4034, lng: 124.8412, income: "Low", services: "Moderate", housing: "Fair" },
-            { name: "Maluko", level: "High", pct: 53.75, hh: 165, pilot: true, lat: 8.3298, lng: 124.8489, income: "Low", services: "Limited", housing: "Poor" },
-            { name: "Lunocan", level: "High", pct: 53.16, hh: 298, pilot: true, lat: 8.3901, lng: 124.8912, income: "Low", services: "Moderate", housing: "Fair" },
-            { name: "Alae", level: "Moderate", pct: 28.40, hh: 540, pilot: true, lat: 8.4178, lng: 124.8089, income: "Low", services: "Moderate", housing: "Fair" },
-            { name: "Dahilayan", level: "Moderate", pct: 24.15, hh: 210, pilot: true, lat: 8.2215, lng: 124.8490, income: "Low", services: "Moderate", housing: "Fair" },
-            { name: "Agusan Canyon", level: "Low", pct: 18.30, hh: 470, pilot: true, lat: 8.3263, lng: 124.8086, income: "Moderate", services: "Moderate", housing: "Fair" },
-            { name: "Damilag", level: "Low", pct: 15.20, hh: 610, pilot: true, lat: 8.3503, lng: 124.8121, income: "Moderate", services: "Full", housing: "Good" },
-            { name: "Tankulan", level: "Very Low", pct: 6.80, hh: 720, pilot: true, lat: 8.3688, lng: 124.8641, income: "Moderate", services: "Full", housing: "Good" },
-        ];
+    <!-- POVERTY DATA -->
+    <div class="view" id="view-poverty-data">
+      <div class="pd-grid">
 
-        const LEVEL_COLOR = { High: '#a4322a', Moderate: '#c76b1f', Low: '#c9a227', 'Very Low': '#2f7d3c' };
-        const LEVEL_CLASS = { High: 'high', Moderate: 'mod', Low: 'low', 'Very Low': 'vlow' };
-        const UPDATES = [
-            { text: 'Poverty data updated for Barangay Guilang-guilang', time: '2 hours ago' },
-            { text: 'New household survey submitted for Santiago', time: '5 hours ago' },
-            { text: 'Quarterly Trends Report generated (Q3 2026)', time: '1 day ago' },
-            { text: 'Barangay boundary layer synced', time: '2 days ago' },
-        ];
+        <!-- Historical Trend Records -->
+        <div class="panel-box">
+          <div class="panel-box-head">
+            <div><div class="panel-box-title">Historical Trend Records</div><div class="panel-box-sub">Poor household magnitude and proportion by year, per barangay</div></div>
+            <button class="icon-btn primary" onclick="toggleRecordForm()" title="Add record" aria-label="Add record">➕</button>
+          </div>
 
-        // ── HISTORICAL TREND RECORDS (Poverty Data → Add) ──
-        // Seeded with the one confirmed data point (Guilang-guilang, 2021); the
-        // other year/barangay cells are intentionally blank until filled in via
-        // the Add form, same as the source survey table.
-        let POVERTY_RECORDS = [
-            { barangay: "Guilang-guilang", year: 2019, hh: null, mag: null },
-            { barangay: "Guilang-guilang", year: 2021, hh: 303, mag: 257 },
-            { barangay: "Guilang-guilang", year: 2023, hh: null, mag: null },
-            { barangay: "Guilang-guilang", year: 2025, hh: null, mag: null },
-        ];
+          <div class="record-form" id="record-form-card" style="display:none;">
+            <div class="record-form-grid">
+              <div><label class="lf-label">Barangay</label><select class="filter-select" id="rec-barangay" style="width:100%;"></select></div>
+              <div><label class="lf-label">Year</label>
+                <select class="filter-select" id="rec-year" style="width:100%;">
+                  <option value="2019">2019</option><option value="2021">2021</option><option value="2023">2023</option><option value="2025" selected>2025</option>
+                </select>
+              </div>
+              <div><label class="lf-label">No. of Households</label><input class="lf-input" type="number" min="0" id="rec-hh" placeholder="e.g. 300" oninput="autoCalcProportion()"></div>
+              <div><label class="lf-label">Poor HH Magnitude</label><input class="lf-input" type="number" min="0" id="rec-mag" placeholder="e.g. 250" oninput="autoCalcProportion()"></div>
+              <div><label class="lf-label">Poor HH Proportion (%)</label><input class="lf-input" type="number" min="0" max="100" step="0.01" id="rec-pct" placeholder="Auto-calculated"></div>
+            </div>
+            <div class="record-form-actions">
+              <button class="icon-btn primary" onclick="saveRecord()" title="Save record" aria-label="Save record">💾</button>
+              <button class="icon-btn outline" onclick="toggleRecordForm()" title="Cancel" aria-label="Cancel">✖</button>
+            </div>
+          </div>
 
-        // ── ACCOUNTS (admin-managed, in-memory for this session) ──
-        // Only one Administrator account exists by default. Accounts live in a plain
-        // JS variable rather than persistent storage, so they reset on page reload;
-        // this keeps the demo self-contained without relying on browser storage APIs.
-        let ACCOUNTS = [
-            { username: '2031858@nbsc.edu.ph', password: 'Rafer1102', role: 'Administrator', barangay: 'Municipal-wide', status: 'Active' },
-            { username: 'lgu.staff', password: 'LguStaff@2026', role: 'LGU Staff', barangay: 'Municipal-wide', status: 'Active' },
-            { username: 'barangay.guilangguilang', password: 'Barangay@2026', role: 'Barangay', barangay: 'Guilang-guilang', status: 'Active' }
-        ];
-        let currentUser = null;
+          <div class="table-scroll">
+            <table class="data-table" style="box-shadow:none;">
+              <thead><tr><th>Barangay</th><th>Year</th><th>No. of HH</th><th>Poor HH Mag.</th><th>Poor HH %</th><th></th></tr></thead>
+              <tbody id="record-table-body"></tbody>
+            </table>
+          </div>
+        </div>
 
-        // Use case diagram → which sidebar views each role may open.
-        //   ADMIN (MSWDO): every use case bubble
-        //   LGU STAFF: Dashboard, Manage Poverty Data, View GIS Map, Generate Reports
-        //   BARANGAY: Dashboard, View GIS Map only
-        const ROLE_PERMISSIONS = {
-            'Administrator': ['dashboard', 'barangays', 'poverty-data', 'map-view', 'reports', 'users', 'settings'],
-            'LGU Staff': ['dashboard', 'poverty-data', 'map-view', 'reports'],
-            'Barangay': ['dashboard', 'map-view'],
-        };
+        <!-- Household Indicators -->
+        <div class="panel-box">
+          <div class="panel-box-head">
+            <div><div class="panel-box-title">Household Indicators</div><div class="panel-box-sub">Income, occupation &amp; education by barangay</div></div>
+            <button class="icon-btn primary" onclick="toggleBarangayForm()" title="Add barangay" aria-label="Add barangay">➕</button>
+          </div>
 
-        function ensureAdminSafety() {
-            // Safety net: never allow zero Administrator accounts to exist.
-            if (!ACCOUNTS.some(a => a.role === 'Administrator')) {
-                ACCOUNTS.push({ username: '2031858@nbsc.edu.ph', password: 'Rafer1102', role: 'Administrator', barangay: 'Municipal-wide', status: 'Active' });
-            }
-            // Safety net: never allow zero *active* Administrator accounts to exist —
-            // otherwise a suspended admin can permanently lock everyone out of the
-            // system, since login blocks non-Active accounts and only an already
-            // logged-in admin can reactivate one.
-            if (!ACCOUNTS.some(a => a.role === 'Administrator' && a.status === 'Active')) {
-                const admin = ACCOUNTS.find(a => a.role === 'Administrator');
-                if (admin) admin.status = 'Active';
-            }
-        }
-        function isAdmin() {
-            return !!(currentUser && currentUser.role === 'Administrator');
-        }
+          <div class="record-form" id="barangay-form-card" style="display:none;">
+            <div class="record-form-grid">
+              <div><label class="lf-label">Barangay Name</label><input class="lf-input" id="bg-name" placeholder="e.g. Alae"></div>
+              <div><label class="lf-label">Poverty Level</label>
+                <select class="filter-select" id="bg-level" style="width:100%;">
+                  <option value="High">High</option><option value="Moderate" selected>Moderate</option><option value="Low">Low</option><option value="Very Low">Very Low</option>
+                </select>
+              </div>
+              <div><label class="lf-label">Poverty Incidence (%)</label><input class="lf-input" type="number" min="0" max="100" step="0.01" id="bg-pct" placeholder="e.g. 24.50"></div>
+              <div><label class="lf-label">Households Surveyed</label><input class="lf-input" type="number" min="0" id="bg-hh" placeholder="e.g. 400"></div>
+              <div><label class="lf-label">Income</label>
+                <select class="filter-select" id="bg-income" style="width:100%;"><option value="Low">Low</option><option value="Moderate">Moderate</option><option value="High">High</option></select>
+              </div>
+              <div><label class="lf-label">Housing Condition</label>
+                <select class="filter-select" id="bg-housing" style="width:100%;"><option value="Poor">Poor</option><option value="Fair">Fair</option><option value="Good">Good</option></select>
+              </div>
+              <div><label class="lf-label">Access to Basic Services</label>
+                <select class="filter-select" id="bg-services" style="width:100%;"><option value="Limited">Limited</option><option value="Moderate">Moderate</option><option value="Full">Full</option></select>
+              </div>
+              <div><label class="lf-label">Latitude</label><input class="lf-input" type="number" step="0.0001" id="bg-lat" placeholder="e.g. 8.3745"></div>
+              <div><label class="lf-label">Longitude</label><input class="lf-input" type="number" step="0.0001" id="bg-lng" placeholder="e.g. 124.8467"></div>
+            </div>
+            <div class="record-form-actions">
+              <button class="icon-btn primary" onclick="saveBarangay()" title="Save barangay" aria-label="Save barangay">💾</button>
+              <button class="icon-btn outline" onclick="toggleBarangayForm()" title="Cancel" aria-label="Cancel">✖</button>
+            </div>
+          </div>
 
-        // ── LOGIN ──
-        function doLogin() {
-            const u = document.getElementById('login-user').value.trim();
-            const p = document.getElementById('login-pass').value.trim();
-            const err = document.getElementById('login-error');
+          <div class="panel-box-body" style="padding-bottom:0;">
+            <div style="background:var(--gold-dim);border:1px solid var(--gold);border-radius:var(--radius-sm);padding:10px 14px;font-size:11.5px;color:var(--ink2);line-height:1.5;margin-bottom:12px;">
+              <strong style="color:var(--gold);">Classification basis:</strong> the ML model uses income, occupation, and educational attainment as primary indicators, plus household size, housing condition, and access to services. Figures shown are illustrative for the <span id="pd-banner-count">5</span> tracked barangays.
+            </div>
+            <input class="search-input" id="pd-search" placeholder="Search barangay..." oninput="renderPovertyData()" style="width:100%;margin-bottom:12px;">
+          </div>
 
-            if (!u || !p) {
-                err.textContent = 'Please enter both a username and password.';
-                err.classList.add('show');
-                return;
-            }
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead><tr><th>Barangay &amp; Indicators</th><th style="width:60px"></th></tr></thead>
+              <tbody id="pd-table-body"></tbody>
+            </table>
+          </div>
+        </div>
 
-            ensureAdminSafety();
-            const match = ACCOUNTS.find(a => a.username.toLowerCase() === u.toLowerCase() && a.password === p);
+      </div>
+    </div>
 
-            if (!match) {
-                err.textContent = 'Invalid username or password.';
-                err.classList.add('show');
-                return;
-            }
-            if (match.status && match.status !== 'Active') {
-                err.textContent = 'This account has been suspended. Contact the administrator.';
-                err.classList.add('show');
-                return;
-            }
+    <!-- MAP VIEW -->
+    <div class="view" id="view-map-view" style="padding:0;">
+      <div id="panel-map-view">
+        <div class="map-view-wrap">
+          <div id="full-map"></div>
+          <div class="map-legend">
+            <div class="map-legend-title">Poverty Classification</div>
+            <div class="leg-row"><span class="leg-dot" style="background:var(--high)"></span>High (36%+)</div>
+            <div class="leg-row"><span class="leg-dot" style="background:var(--mod)"></span>Moderate (21–35%)</div>
+            <div class="leg-row"><span class="leg-dot" style="background:var(--low)"></span>Low (11–20%)</div>
+            <div class="leg-row"><span class="leg-dot" style="background:var(--vlow)"></span>Very Low (0–10%)</div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-            err.classList.remove('show');
-            currentUser = match;
-            document.getElementById('sb-username').textContent = match.username;
-            document.getElementById('sb-userrole').textContent = match.role;
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('app').classList.add('active');
+    <!-- REPORTS -->
+    <div class="view" id="view-reports">
+      <div class="report-cards">
+        <div class="rep-card" onclick="toast('Generating municipal summary report…')"><div class="rep-icon">📈</div><div class="rep-title">Municipal Poverty Summary</div><div class="rep-desc">Overview of poverty incidence across all tracked barangays.</div></div>
+        <div class="rep-card" onclick="toast('Generating barangay comparison report…')"><div class="rep-icon">📊</div><div class="rep-title">Barangay Comparison</div><div class="rep-desc">Side-by-side indicator breakdown for selected barangays.</div></div>
+        <div class="rep-card" onclick="toast('Generating trend analysis…')"><div class="rep-icon">📉</div><div class="rep-title">Trend Analysis</div><div class="rep-desc">Poverty indicator movement across survey periods.</div></div>
+        <div class="rep-card" onclick="toast('Generating pilot barangay report…')"><div class="rep-icon">🧭</div><div class="rep-title">Pilot Coverage Report</div><div class="rep-desc">Status of the pilot barangays under the ML classification model.</div></div>
+      </div>
+    </div>
 
-            applyRolePermissions();
-            renderUsersView();
-            setTimeout(initMaps, 60);
-        }
-        function doLogout() {
-            currentUser = null;
-            document.getElementById('app').classList.remove('active');
-            document.getElementById('login-screen').style.display = 'flex';
-            document.getElementById('login-user').value = '';
-            document.getElementById('login-pass').value = '';
-        }
+    <!-- USERS -->
+    <div class="view" id="view-users">
+      <div id="acc-restricted-note" class="acc-restricted-note" style="display:none;">
+        <strong>Restricted:</strong> only Administrator accounts can create, suspend, or remove accounts. You may still view the account list below.
+      </div>
 
-        // Show/hide every sidebar link based on the current role's permitted views
-        // (per the use case diagram), plus the account-management tools.
-        function applyRolePermissions() {
-            const allowed = (currentUser && ROLE_PERMISSIONS[currentUser.role]) || ['dashboard'];
-            document.querySelectorAll('.sb-link').forEach(link => {
-                const view = link.dataset.view;
-                link.style.display = allowed.includes(view) ? 'flex' : 'none';
-            });
+      <div id="acc-admin-tools" style="display:none;">
+        <div class="data-toolbar">
+          <button class="icon-btn primary" onclick="toggleCreateAccountForm()" title="Create account" aria-label="Create account">➕</button>
+        </div>
+        <div class="acc-card" id="create-account-card" style="display:none;">
+          <div class="lf-group"><label class="lf-label">Username</label><input class="lf-input" id="new-acc-username" placeholder="Enter username"></div>
+          <div class="lf-group"><label class="lf-label">Password</label><input class="lf-input" type="password" id="new-acc-password" placeholder="Enter password"></div>
+          <div class="lf-group"><label class="lf-label">Role</label>
+            <select class="filter-select" id="new-acc-role" style="width:100%;">
+              <option value="Barangay">Barangay</option>
+              <option value="LGU Staff">LGU Staff</option>
+            </select>
+          </div>
+          <div class="lf-group"><label class="lf-label">Assigned Barangay</label><input class="lf-input" id="new-acc-barangay" placeholder="e.g. Municipal-wide"></div>
+          <div style="display:flex;align-items:center;margin-top:4px;">
+            <button class="icon-btn primary" onclick="createAccount()" title="Save account" aria-label="Save account">💾</button>
+            <button class="icon-btn outline" onclick="toggleCreateAccountForm()" title="Cancel" aria-label="Cancel">✖</button>
+          </div>
+        </div>
+      </div>
 
-            const admin = isAdmin();
-            const adminTools = document.getElementById('acc-admin-tools');
-            const restrictedNote = document.getElementById('acc-restricted-note');
-            if (adminTools) adminTools.style.display = admin ? 'block' : 'none';
-            if (restrictedNote) restrictedNote.style.display = admin ? 'none' : 'block';
-        }
+      <div class="data-table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Username</th><th>Role</th><th>Assigned Barangay</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="users-table-body"></tbody>
+        </table>
+      </div>
+    </div>
 
-        // ── ACCOUNT MANAGEMENT (admin only) ──
-        function toggleCreateAccountForm() {
-            const card = document.getElementById('create-account-card');
-            card.style.display = (card.style.display === 'none' || !card.style.display) ? 'block' : 'none';
-        }
-        function createAccount() {
-            if (!isAdmin()) { toast('Only Administrator accounts can create accounts.'); return; }
-            const username = document.getElementById('new-acc-username').value.trim();
-            const password = document.getElementById('new-acc-password').value.trim();
-            const role = document.getElementById('new-acc-role').value;
-            const barangay = document.getElementById('new-acc-barangay').value.trim() || 'Municipal-wide';
+    <!-- SETTINGS -->
+    <div class="view" id="view-settings">
+      <div class="settings-card">
+        <div class="settings-row">
+          <div><div class="settings-label">Email notifications</div><div class="settings-sub">Get notified when new survey data is submitted</div></div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div>
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-label">Auto-refresh dashboard</div><div class="settings-sub">Refresh statistics every 5 minutes</div></div>
+          <div class="toggle" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div>
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-label">Privacy-minimized view</div><div class="settings-sub">Aggregate data at barangay/sitio level only</div></div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"><div class="toggle-knob"></div></div>
+        </div>
+        <div style="margin-top:16px;display:flex;align-items:center;">
+          <button class="icon-btn primary" onclick="toast('Settings saved','success')" title="Save changes" aria-label="Save changes">💾</button>
+          <button class="icon-btn outline" onclick="toast('Reverted to defaults')" title="Reset" aria-label="Reset">↺</button>
+        </div>
+      </div>
+    </div>
 
-            if (!username || !password) { toast('Username and password are required.'); return; }
+  </main>
+</div>
 
-            if (ACCOUNTS.some(a => a.username.toLowerCase() === username.toLowerCase())) {
-                toast('That username already exists.');
-                return;
-            }
-            ACCOUNTS.push({ username, password, role, barangay, status: 'Active' });
+<div class="toast-wrap" id="toast-wrap"></div>
 
-            document.getElementById('new-acc-username').value = '';
-            document.getElementById('new-acc-password').value = '';
-            document.getElementById('new-acc-barangay').value = '';
-            toggleCreateAccountForm();
-            renderUsersView();
-            toast('Account created successfully.', 'success');
-        }
-        function toggleAccountStatus(username) {
-            if (!isAdmin()) { toast('Only Administrator accounts can update account status.'); return; }
-            const target = ACCOUNTS.find(a => a.username === username);
-            if (!target) return;
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ── BARANGAY DATA (5 pilot barangays, all High poverty) ──
+// Coordinates are APPROXIMATE (verified:false) until confirmed on openstreetmap.org
+// (right-click the barangay center > "Show address" / copy lat,lng), then set verified:true.
+// Minsuro and Ticala values are PLACEHOLDERS — replace with real survey data.
+// "level" is computed from pct by classify() below.
+const BARANGAYS = [
+  { name: "Minsuro",         pct: 45.00, hh: 250, pilot: true, lat: 8.3900, lng: 124.8300, verified: false, income: "Low", services: "Limited", housing: "Poor" },
+  { name: "Ticala",          pct: 42.00, hh: 220, pilot: true, lat: 8.3700, lng: 124.8700, verified: false, income: "Low", services: "Limited", housing: "Poor" },
+  { name: "Guilang-Guilang", pct: 84.82, hh: 412, pilot: true, lat: 8.3745, lng: 124.8467, verified: false, income: "Low", services: "Limited", housing: "Poor" },
+  { name: "Santiago",        pct: 74.35, hh: 389, pilot: true, lat: 8.3512, lng: 124.8801, verified: false, income: "Low", services: "Limited", housing: "Poor" },
+  { name: "Maluco",          pct: 53.75, hh: 165, pilot: true, lat: 8.3298, lng: 124.8489, verified: false, income: "Low", services: "Limited", housing: "Poor" },
+];
+function classify(pct) { return pct >= 36 ? 'High' : pct >= 21 ? 'Moderate' : pct >= 11 ? 'Low' : 'Very Low'; }
+BARANGAYS.forEach(b => b.level = classify(b.pct));
 
-            // Guard: don't allow suspending the last active Administrator — doing so
-            // would lock everyone out, since a suspended account can't log back in
-            // to reverse it.
-            if (target.role === 'Administrator' && target.status === 'Active') {
-                const activeAdmins = ACCOUNTS.filter(a => a.role === 'Administrator' && a.status === 'Active');
-                if (activeAdmins.length <= 1) {
-                    toast('At least one active Administrator account must remain.');
-                    return;
-                }
-            }
+const LEVEL_COLOR = { High: '#a4322a', Moderate: '#c76b1f', Low: '#c9a227', 'Very Low': '#2f7d3c' };
+const LEVEL_CLASS = { High: 'high', Moderate: 'mod', Low: 'low', 'Very Low': 'vlow' };
+const UPDATES = [
+  { text: 'Poverty data updated for Barangay Guilang-Guilang', time: '2 hours ago' },
+  { text: 'New household survey submitted for Santiago', time: '5 hours ago' },
+  { text: 'Quarterly Trends Report generated (Q3 2026)', time: '1 day ago' },
+  { text: 'Barangay boundary layer synced', time: '2 days ago' },
+];
 
-            target.status = (target.status === 'Active') ? 'Suspended' : 'Active';
-            renderUsersView();
-            toast(`Account ${target.status === 'Active' ? 'activated' : 'suspended'}.`, 'success');
-        }
-        function deleteAccount(username) {
-            if (!isAdmin()) { toast('Only Administrator accounts can remove accounts.'); return; }
-            if (currentUser && username.toLowerCase() === currentUser.username.toLowerCase()) {
-                toast('You cannot delete the account you are currently signed in with.');
-                return;
-            }
-            const target = ACCOUNTS.find(a => a.username === username);
-            if (target && target.role === 'Administrator' && ACCOUNTS.filter(a => a.role === 'Administrator').length <= 1) {
-                toast('At least one Administrator account must remain.');
-                return;
-            }
-            ACCOUNTS = ACCOUNTS.filter(a => a.username !== username);
-            renderUsersView();
-            toast('Account removed.', 'success');
-        }
-        function renderUsersView() {
-            const admin = isAdmin();
-            document.getElementById('users-table-body').innerHTML = ACCOUNTS.map(a => `
+// ── HISTORICAL TREND RECORDS ──
+let POVERTY_RECORDS = [
+  { barangay: "Guilang-Guilang", year: 2021, hh: 303, mag: 257 },
+];
+
+// ── ACCOUNTS ──
+let ACCOUNTS = [
+  { username: 'admin',    password: 'admin123',    role: 'Administrator', barangay: 'Municipal-wide', status: 'Active' },
+  { username: 'lgustaff', password: 'lgustaff123', role: 'LGU Staff',     barangay: 'Municipal-wide', status: 'Active' }
+];
+let currentUser = null;
+
+// ── ROLE ACCESS ──
+// Pages each role may open. Edit these lists to change what a role can see.
+const ROLE_VIEWS = {
+  'Administrator': ['dashboard', 'barangays', 'poverty-data', 'map-view', 'reports', 'users', 'settings'],
+  'LGU Staff':     ['dashboard', 'poverty-data', 'map-view'],
+  'Barangay':      ['dashboard', 'poverty-data', 'map-view']
+};
+function canView(name) {
+  return !!currentUser && (ROLE_VIEWS[currentUser.role] || []).includes(name);
+}
+
+function ensureAdminSafety() {
+  if (!ACCOUNTS.some(a => a.role === 'Administrator')) {
+    ACCOUNTS.push({ username: 'admin', password: 'admin123', role: 'Administrator', barangay: 'Municipal-wide', status: 'Active' });
+  }
+  if (!ACCOUNTS.some(a => a.role === 'Administrator' && a.status === 'Active')) {
+    const admin = ACCOUNTS.find(a => a.role === 'Administrator');
+    if (admin) admin.status = 'Active';
+  }
+}
+function isAdmin() { return !!(currentUser && currentUser.role === 'Administrator'); }
+
+// ── LOGIN ──
+function togglePassword() {
+  const input = document.getElementById('login-pass');
+  const btn = document.getElementById('pw-toggle');
+  const show = input.type === 'password';
+  input.type = show ? 'text' : 'password';
+  btn.textContent = show ? '🙈' : '👁';
+  btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+}
+function doLogin() {
+  const u = document.getElementById('login-user').value.trim();
+  const p = document.getElementById('login-pass').value.trim();
+  const err = document.getElementById('login-error');
+  if (!u || !p) { err.textContent = 'Please enter both a username and password.'; err.classList.add('show'); return; }
+  ensureAdminSafety();
+  const match = ACCOUNTS.find(a => a.username.toLowerCase() === u.toLowerCase() && a.password === p);
+  if (!match) { err.textContent = 'Invalid username or password.'; err.classList.add('show'); return; }
+  if (match.status && match.status !== 'Active') { err.textContent = 'This account has been suspended. Contact the administrator.'; err.classList.add('show'); return; }
+  err.classList.remove('show');
+  currentUser = match;
+  document.getElementById('sb-username').textContent = match.username;
+  document.getElementById('sb-userrole').textContent = match.role;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').classList.add('active');
+  applyRolePermissions();
+  showView('dashboard');
+  renderUsersView();
+  setTimeout(initMaps, 60);
+}
+function doLogout() {
+  currentUser = null;
+  document.getElementById('app').classList.remove('active');
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-pass').type = 'password';
+  document.getElementById('pw-toggle').textContent = '👁';
+  document.getElementById('pw-toggle').setAttribute('aria-label', 'Show password');
+}
+function applyRolePermissions() {
+  const admin = isAdmin();
+  document.querySelectorAll('.sb-link').forEach(link => {
+    link.style.display = canView(link.dataset.view) ? 'flex' : 'none';
+  });
+  const adminTools = document.getElementById('acc-admin-tools');
+  const restrictedNote = document.getElementById('acc-restricted-note');
+  if (adminTools) adminTools.style.display = admin ? 'block' : 'none';
+  if (restrictedNote) restrictedNote.style.display = admin ? 'none' : 'block';
+}
+
+// ── ACCOUNT MANAGEMENT ──
+function toggleCreateAccountForm() {
+  const card = document.getElementById('create-account-card');
+  card.style.display = (card.style.display === 'none' || !card.style.display) ? 'block' : 'none';
+}
+function createAccount() {
+  if (!isAdmin()) { toast('Only Administrator accounts can create accounts.'); return; }
+  const username = document.getElementById('new-acc-username').value.trim();
+  const password = document.getElementById('new-acc-password').value.trim();
+  const role = document.getElementById('new-acc-role').value;
+  const barangay = document.getElementById('new-acc-barangay').value.trim() || 'Municipal-wide';
+  if (!username || !password) { toast('Username and password are required.'); return; }
+  if (ACCOUNTS.some(a => a.username.toLowerCase() === username.toLowerCase())) { toast('That username already exists.'); return; }
+  ACCOUNTS.push({ username, password, role, barangay, status: 'Active' });
+  document.getElementById('new-acc-username').value = '';
+  document.getElementById('new-acc-password').value = '';
+  document.getElementById('new-acc-barangay').value = '';
+  toggleCreateAccountForm();
+  renderUsersView();
+  toast('Account created successfully.', 'success');
+}
+function toggleAccountStatus(username) {
+  if (!isAdmin()) { toast('Only Administrator accounts can update account status.'); return; }
+  const target = ACCOUNTS.find(a => a.username === username);
+  if (!target) return;
+  if (target.role === 'Administrator' && target.status === 'Active') {
+    const activeAdmins = ACCOUNTS.filter(a => a.role === 'Administrator' && a.status === 'Active');
+    if (activeAdmins.length <= 1) { toast('At least one active Administrator account must remain.'); return; }
+  }
+  target.status = (target.status === 'Active') ? 'Suspended' : 'Active';
+  renderUsersView();
+  toast('Account ' + (target.status === 'Active' ? 'activated' : 'suspended') + '.', 'success');
+}
+function deleteAccount(username) {
+  if (!isAdmin()) { toast('Only Administrator accounts can remove accounts.'); return; }
+  if (currentUser && username.toLowerCase() === currentUser.username.toLowerCase()) { toast('You cannot delete the account you are currently signed in with.'); return; }
+  const target = ACCOUNTS.find(a => a.username === username);
+  if (target && target.role === 'Administrator' && ACCOUNTS.filter(a => a.role === 'Administrator').length <= 1) { toast('At least one Administrator account must remain.'); return; }
+  ACCOUNTS = ACCOUNTS.filter(a => a.username !== username);
+  renderUsersView();
+  toast('Account removed.', 'success');
+}
+function renderUsersView() {
+  const admin = isAdmin();
+  document.getElementById('users-table-body').innerHTML = ACCOUNTS.map(a => `
     <tr>
       <td><strong>${a.username}</strong>${currentUser && a.username === currentUser.username ? ' <span style="font-size:10px;color:var(--forest2);font-weight:700;">· YOU</span>' : ''}</td>
       <td>${a.role}</td>
@@ -1923,220 +676,209 @@
         <button class="icon-btn danger" onclick="deleteAccount('${a.username}')" title="Delete account" aria-label="Delete account">🗑</button>
       ` : '—'}</td>
     </tr>`).join('');
-        }
+}
 
-        // ── NAV ──
-        const TITLES = {
-            dashboard: ['Dashboard', 'Municipal poverty overview'],
-            barangays: ['Barangays', 'Manage and browse all tracked barangays'],
-            'poverty-data': ['Poverty Data', 'Indicator-level survey data by barangay'],
-            'map-view': ['Map View', 'Geographic distribution of poverty classification'],
-            reports: ['Reports', 'Generate poverty analysis reports'],
-            users: ['Users', 'Manage system accounts and access'],
-            settings: ['Settings', 'System preferences'],
-        };
-        function showView(name) {
-            const allowed = (currentUser && ROLE_PERMISSIONS[currentUser.role]) || ['dashboard'];
-            if (!allowed.includes(name)) name = 'dashboard';
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.getElementById('view-' + name).classList.add('active');
-            document.querySelectorAll('.sb-link').forEach(n => n.classList.remove('active'));
-            document.querySelector(`.sb-link[data-view="${name}"]`).classList.add('active');
-            document.getElementById('topbar-title').textContent = TITLES[name][0];
-            document.getElementById('topbar-sub').textContent = TITLES[name][1];
-            if (name === 'users') renderUsersView();
-            if (window.innerWidth <= 768) closeSidebar();
-            if (name === 'map-view' && fullMap) setTimeout(() => fullMap.invalidateSize(), 80);
-            if (name === 'dashboard' && dashMap) setTimeout(() => dashMap.invalidateSize(), 80);
-        }
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); document.getElementById('overlay').classList.toggle('active'); }
-        function closeSidebar() { document.getElementById('sidebar').classList.remove('active'); document.getElementById('overlay').classList.remove('active'); }
+// ── NAV ──
+const TITLES = {
+  dashboard: ['Dashboard', 'Municipal poverty overview'],
+  barangays: ['Barangays', 'Manage and browse all tracked barangays'],
+  'poverty-data': ['Poverty Data', 'Indicator-level survey data by barangay'],
+  'map-view': ['Map View', 'Geographic distribution of poverty classification'],
+  reports: ['Reports', 'Generate poverty analysis reports'],
+  users: ['Users', 'Manage system accounts and access'],
+  settings: ['Settings', 'System preferences'],
+};
+function showView(name) {
+  if (!canView(name)) { toast('You do not have access to that page.'); return; }
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  document.querySelectorAll('.sb-link').forEach(n => n.classList.remove('active'));
+  document.querySelector(`.sb-link[data-view="${name}"]`).classList.add('active');
+  document.getElementById('topbar-title').textContent = TITLES[name][0];
+  document.getElementById('topbar-sub').textContent = TITLES[name][1];
+  if (name === 'users') renderUsersView();
+  if (window.innerWidth <= 768) closeSidebar();
+  // Create/refresh maps once their view is visible so they never initialize at zero size
+  setTimeout(refreshMaps, 60);
+}
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); document.getElementById('overlay').classList.toggle('active'); }
+function closeSidebar() { document.getElementById('sidebar').classList.remove('active'); document.getElementById('overlay').classList.remove('active'); }
 
-        // ── DASHBOARD FILL ──
-        function renderStats() {
-            const counts = { High: 0, Moderate: 0, Low: 0, 'Very Low': 0 };
-            let totalPct = 0;
-            BARANGAYS.forEach(b => { counts[b.level] = (counts[b.level] || 0) + 1; totalPct += b.pct; });
-            document.getElementById('stat-high').textContent = counts.High;
-            document.getElementById('stat-mod').textContent = counts.Moderate;
-            document.getElementById('stat-low').textContent = counts.Low;
-            document.getElementById('stat-vlow').textContent = counts['Very Low'];
-
-            const avgPct = BARANGAYS.length ? (totalPct / BARANGAYS.length) : 0;
-            document.getElementById('gauge-num').textContent = avgPct.toFixed(2) + '%';
-            const circumference = 150.8;
-            const ring = document.getElementById('gauge-ring');
-            ring.setAttribute('stroke-dashoffset', (circumference * (1 - avgPct / 100)).toFixed(1));
-
-            document.getElementById('topbar-chip').textContent = `${BARANGAYS.length} Barangays Tracked`;
-            document.getElementById('pd-banner-count').textContent = BARANGAYS.length;
-            document.getElementById('top5-title').textContent = `Top ${Math.min(5, BARANGAYS.length)} High Poverty Barangays`;
-        }
-        function renderTop5() {
-            const top5 = [...BARANGAYS].sort((a, b) => b.pct - a.pct).slice(0, 5);
-            document.getElementById('top5-body').innerHTML = top5.map((b, i) => `
+// ── DASHBOARD ──
+function renderStats() {
+  const counts = { High: 0, Moderate: 0, Low: 0, 'Very Low': 0 };
+  let totalPct = 0;
+  BARANGAYS.forEach(b => { counts[b.level] = (counts[b.level] || 0) + 1; totalPct += b.pct; });
+  document.getElementById('stat-high').textContent = counts.High;
+  document.getElementById('stat-mod').textContent = counts.Moderate;
+  document.getElementById('stat-low').textContent = counts.Low;
+  document.getElementById('stat-vlow').textContent = counts['Very Low'];
+  const avgPct = BARANGAYS.length ? (totalPct / BARANGAYS.length) : 0;
+  document.getElementById('gauge-num').textContent = avgPct.toFixed(2) + '%';
+  const circumference = 150.8;
+  document.getElementById('gauge-ring').setAttribute('stroke-dashoffset', (circumference * (1 - avgPct / 100)).toFixed(1));
+  document.getElementById('topbar-chip').textContent = `${BARANGAYS.length} Barangays Tracked`;
+  document.getElementById('pd-banner-count').textContent = BARANGAYS.length;
+  document.getElementById('top5-title').textContent = `Top ${Math.min(5, BARANGAYS.length)} High Poverty Barangays`;
+}
+function renderTop5() {
+  const top5 = [...BARANGAYS].sort((a, b) => b.pct - a.pct).slice(0, 5);
+  document.getElementById('top5-body').innerHTML = top5.map((b, i) => `
     <tr>
       <td><div class="rank-num">${i + 1}</div></td>
       <td>${b.name}</td>
       <td><span class="lvl-pill ${LEVEL_CLASS[b.level]}">${b.level}</span></td>
       <td>Poverty ${b.pct}%</td>
     </tr>`).join('');
-        }
-        function renderUpdates() {
-            document.getElementById('updates-body').innerHTML = UPDATES.map(u => `
+}
+function renderUpdates() {
+  document.getElementById('updates-body').innerHTML = UPDATES.map(u => `
     <div class="update-item">
       <div class="update-dot"></div>
       <div><div class="update-text">${u.text}</div><div class="update-time">${u.time}</div></div>
     </div>`).join('');
-        }
+}
 
-        // ── BARANGAYS TABLE ──
-        function renderBarangays() {
-            const q = document.getElementById('bgy-search').value.toLowerCase();
-            const lvl = document.getElementById('bgy-filter').value;
-            const rows = BARANGAYS.filter(b => b.name.toLowerCase().includes(q) && (!lvl || b.level === lvl));
-            document.getElementById('bgy-table-body').innerHTML = rows.map(b => `
+// ── BARANGAYS TABLE ──
+function renderBarangays() {
+  const q = document.getElementById('bgy-search').value.toLowerCase();
+  const lvl = document.getElementById('bgy-filter').value;
+  const rows = BARANGAYS.filter(b => b.name.toLowerCase().includes(q) && (!lvl || b.level === lvl));
+  document.getElementById('bgy-table-body').innerHTML = rows.map(b => `
     <tr>
       <td><strong>${b.name}</strong>${b.pilot ? ' <span style="font-size:10px;color:var(--forest2);font-weight:700;">· PILOT</span>' : ''}</td>
       <td>${b.hh}</td>
       <td><span class="lvl-pill ${LEVEL_CLASS[b.level]}">${b.level}</span></td>
       <td><span class="bar-track"><span class="bar-fill" style="width:${b.pct}%;background:${LEVEL_COLOR[b.level]}"></span></span>${b.pct}%</td>
-    </tr>`).join('') || `<tr><td colspan="4" style="text-align:center;color:var(--ink3);padding:24px;">No barangays match your search.</td></tr>`;
-        }
+      <td><button class="icon-btn danger" onclick="deleteBarangay('${b.name}')" title="Remove barangay" aria-label="Remove barangay">🗑</button></td>
+    </tr>`).join('') || `<tr><td colspan="5" style="text-align:center;color:var(--ink3);padding:24px;">No barangays match your search.</td></tr>`;
+}
 
-        // ── POVERTY DATA (indicator breakdown) ──
-        // Occupation / educational attainment classifications derived from ML-classified
-        // poverty level, per the indicators the trained model is built on (income,
-        // occupation, educational attainment — plus housing and access to services).
-        const OCCUPATION_BY_LEVEL = { High: 'Informal / seasonal farm labor', Moderate: 'Informal, irregular income', Low: 'Formal, semi-regular income', 'Very Low': 'Formal, stable employment' };
-        const EDU_BY_LEVEL = { High: 'Elementary undergrad/grad', Moderate: 'Some secondary education', Low: 'Secondary graduate', 'Very Low': 'Secondary/tertiary graduate' };
-        function renderPovertyData() {
-            const q = document.getElementById('pd-search').value.toLowerCase();
-            const rows = BARANGAYS.filter(b => b.name.toLowerCase().includes(q));
-            document.getElementById('pd-table-body').innerHTML = rows.map(b => `
+// ── POVERTY DATA (two-line rows) ──
+const OCCUPATION_BY_LEVEL = { High: 'Informal / seasonal farm labor', Moderate: 'Informal, irregular income', Low: 'Formal, semi-regular income', 'Very Low': 'Formal, stable employment' };
+const EDU_BY_LEVEL = { High: 'Elementary undergrad/grad', Moderate: 'Some secondary education', Low: 'Secondary graduate', 'Very Low': 'Secondary/tertiary graduate' };
+function renderPovertyData() {
+  const q = document.getElementById('pd-search').value.toLowerCase();
+  const rows = BARANGAYS.filter(b => b.name.toLowerCase().includes(q));
+  document.getElementById('pd-table-body').innerHTML = rows.map(b => `
     <tr>
-      <td><strong>${b.name}</strong></td>
-      <td>${b.income}</td>
-      <td>${OCCUPATION_BY_LEVEL[b.level]}</td>
-      <td>${EDU_BY_LEVEL[b.level]}</td>
-      <td>${b.housing}</td>
-      <td>${b.services}</td>
-    </tr>`).join('');
-        }
+      <td>
+        <div class="bg-line1"><strong>${b.name}</strong><span class="lvl-pill ${LEVEL_CLASS[b.level]}">${b.level}</span></div>
+        <div class="bg-line2">
+          <span class="bg-tag">Income: <b>${b.income}</b></span>
+          <span class="bg-tag">${OCCUPATION_BY_LEVEL[b.level]}</span>
+          <span class="bg-tag">${EDU_BY_LEVEL[b.level]}</span>
+          <span class="bg-tag">Housing: <b>${b.housing}</b></span>
+          <span class="bg-tag">Services: <b>${b.services}</b></span>
+        </div>
+      </td>
+      <td><button class="icon-btn danger" onclick="deleteBarangay('${b.name}')" title="Remove barangay" aria-label="Remove barangay">🗑</button></td>
+    </tr>`).join('') || `<tr><td colspan="2" style="text-align:center;color:var(--ink3);padding:24px;">No barangays found.</td></tr>`;
+}
 
-        // ── ADD BARANGAY (Household Indicators → Add) ──
-        function toggleBarangayForm() {
-            const card = document.getElementById('barangay-form-card');
-            card.style.display = (card.style.display === 'none' || !card.style.display) ? 'block' : 'none';
-        }
-        function saveBarangay() {
-            const name = document.getElementById('bg-name').value.trim();
-            const level = document.getElementById('bg-level').value;
-            const pctVal = document.getElementById('bg-pct').value;
-            const hhVal = document.getElementById('bg-hh').value;
-            const income = document.getElementById('bg-income').value;
-            const housing = document.getElementById('bg-housing').value;
-            const services = document.getElementById('bg-services').value;
-            const latVal = document.getElementById('bg-lat').value;
-            const lngVal = document.getElementById('bg-lng').value;
+// ── ADD / REMOVE BARANGAY ──
+function toggleBarangayForm() {
+  const card = document.getElementById('barangay-form-card');
+  card.style.display = (card.style.display === 'none' || !card.style.display) ? 'block' : 'none';
+}
+function saveBarangay() {
+  const name = document.getElementById('bg-name').value.trim();
+  const pctVal = document.getElementById('bg-pct').value;
+  const hhVal = document.getElementById('bg-hh').value;
+  const income = document.getElementById('bg-income').value;
+  const housing = document.getElementById('bg-housing').value;
+  const services = document.getElementById('bg-services').value;
+  const latVal = document.getElementById('bg-lat').value;
+  const lngVal = document.getElementById('bg-lng').value;
 
-            if (!name) { toast('Please enter a barangay name.'); return; }
-            if (BARANGAYS.some(b => b.name.toLowerCase() === name.toLowerCase())) { toast('That barangay is already tracked.'); return; }
-            if (pctVal === '' || hhVal === '' || latVal === '' || lngVal === '') {
-                toast('Poverty incidence, households, and coordinates are required.');
-                return;
-            }
+  if (!name) { toast('Please enter a barangay name.'); return; }
+  if (BARANGAYS.some(b => b.name.toLowerCase() === name.toLowerCase())) { toast('That barangay is already tracked.'); return; }
+  if (pctVal === '' || hhVal === '' || latVal === '' || lngVal === '') { toast('Poverty incidence, households, and coordinates are required.'); return; }
 
-            const entry = {
-                name, level,
-                pct: parseFloat(pctVal),
-                hh: parseInt(hhVal, 10),
-                pilot: true,
-                lat: parseFloat(latVal),
-                lng: parseFloat(lngVal),
-                income, housing, services
-            };
-            BARANGAYS.push(entry);
+  BARANGAYS.push({
+    name,
+    level: classify(parseFloat(pctVal)), // level is always derived from the incidence
+    verified: false,
+    pct: parseFloat(pctVal),
+    hh: parseInt(hhVal, 10),
+    pilot: true,
+    lat: parseFloat(latVal),
+    lng: parseFloat(lngVal),
+    income, housing, services
+  });
 
-            ['bg-name', 'bg-pct', 'bg-hh', 'bg-lat', 'bg-lng'].forEach(id => document.getElementById(id).value = '');
-            toggleBarangayForm();
+  ['bg-name', 'bg-pct', 'bg-hh', 'bg-lat', 'bg-lng'].forEach(id => document.getElementById(id).value = '');
+  toggleBarangayForm();
+  refreshAll();
+  toast('Barangay added.', 'success');
+}
+function deleteBarangay(name) {
+  if (!confirm('Remove ' + name + ' from the system?')) return;
+  const i = BARANGAYS.findIndex(b => b.name === name);
+  if (i === -1) return;
+  BARANGAYS.splice(i, 1);
+  POVERTY_RECORDS = POVERTY_RECORDS.filter(r => r.barangay !== name);
+  refreshAll();
+  toast('Barangay removed.', 'success');
+}
+function refreshAll() {
+  renderStats();
+  renderTop5();
+  renderBarangays();
+  renderPovertyData();
+  renderPovertyRecords();
+  refreshMaps();
+}
 
-            renderStats();
-            renderTop5();
-            renderBarangays();
-            renderPovertyData();
-            addMarkerToMaps(entry);
-            toast('Barangay added.', 'success');
-        }
-        function addMarkerToMaps(b) {
-            [dashMap, fullMap].forEach(m => {
-                if (!m) return;
-                L.circleMarker([b.lat, b.lng], {
-                    radius: 9, color: '#fff', weight: 2, fillColor: LEVEL_COLOR[b.level], fillOpacity: 0.9
-                }).addTo(m).bindPopup(`<b>${b.name}</b><br>${b.level} poverty · ${b.pct}%${b.pilot ? '<br><em style="color:#1f6b34">Pilot barangay</em>' : ''}`);
-            });
-        }
-
-        // ── HISTORICAL TREND RECORDS (Add form) ──
-        function toggleRecordForm() {
-            const card = document.getElementById('record-form-card');
-            const opening = (card.style.display === 'none' || !card.style.display);
-            if (opening) populateRecordBarangayOptions();
-            card.style.display = opening ? 'block' : 'none';
-        }
-        function populateRecordBarangayOptions() {
-            const sel = document.getElementById('rec-barangay');
-            sel.innerHTML = BARANGAYS.map(b => `<option value="${b.name}">${b.name}</option>`).join('');
-        }
-        function autoCalcProportion() {
-            const hh = parseFloat(document.getElementById('rec-hh').value);
-            const mag = parseFloat(document.getElementById('rec-mag').value);
-            const pctField = document.getElementById('rec-pct');
-            if (hh > 0 && !isNaN(mag)) {
-                pctField.value = (mag / hh * 100).toFixed(2);
-            }
-        }
-        function saveRecord() {
-            const barangay = document.getElementById('rec-barangay').value;
-            const year = parseInt(document.getElementById('rec-year').value, 10);
-            const hhVal = document.getElementById('rec-hh').value;
-            const magVal = document.getElementById('rec-mag').value;
-
-            if (!barangay) { toast('Please select a barangay.'); return; }
-            if (hhVal === '' || magVal === '') { toast('Households and poor HH magnitude are required.'); return; }
-
-            const hh = parseFloat(hhVal), mag = parseFloat(magVal);
-            if (mag > hh) { toast('Magnitude cannot exceed number of households.'); return; }
-
-            const existing = POVERTY_RECORDS.find(r => r.barangay === barangay && r.year === year);
-            if (existing) {
-                existing.hh = hh; existing.mag = mag;
-            } else {
-                POVERTY_RECORDS.push({ barangay, year, hh, mag });
-            }
-
-            document.getElementById('rec-hh').value = '';
-            document.getElementById('rec-mag').value = '';
-            document.getElementById('rec-pct').value = '';
-            toggleRecordForm();
-            renderPovertyRecords();
-            toast('Record saved.', 'success');
-        }
-        function deleteRecord(idx) {
-            POVERTY_RECORDS.splice(idx, 1);
-            renderPovertyRecords();
-            toast('Record removed.', 'success');
-        }
-        function recordProportion(r) {
-            if (r.hh && r.mag !== null && r.mag !== undefined) return (r.mag / r.hh * 100);
-            return null;
-        }
-        function renderPovertyRecords() {
-            const sorted = [...POVERTY_RECORDS].sort((a, b) => a.barangay.localeCompare(b.barangay) || a.year - b.year);
-            document.getElementById('record-table-body').innerHTML = sorted.map(r => {
-                const pct = recordProportion(r);
-                const realIdx = POVERTY_RECORDS.indexOf(r);
-                return `<tr>
+// ── HISTORICAL TREND RECORDS ──
+function toggleRecordForm() {
+  const card = document.getElementById('record-form-card');
+  const opening = (card.style.display === 'none' || !card.style.display);
+  if (opening) populateRecordBarangayOptions();
+  card.style.display = opening ? 'block' : 'none';
+}
+function populateRecordBarangayOptions() {
+  document.getElementById('rec-barangay').innerHTML = BARANGAYS.map(b => `<option value="${b.name}">${b.name}</option>`).join('');
+}
+function autoCalcProportion() {
+  const hh = parseFloat(document.getElementById('rec-hh').value);
+  const mag = parseFloat(document.getElementById('rec-mag').value);
+  if (hh > 0 && !isNaN(mag)) document.getElementById('rec-pct').value = (mag / hh * 100).toFixed(2);
+}
+function saveRecord() {
+  const barangay = document.getElementById('rec-barangay').value;
+  const year = parseInt(document.getElementById('rec-year').value, 10);
+  const hhVal = document.getElementById('rec-hh').value;
+  const magVal = document.getElementById('rec-mag').value;
+  if (!barangay) { toast('Please select a barangay.'); return; }
+  if (hhVal === '' || magVal === '') { toast('Households and poor HH magnitude are required.'); return; }
+  const hh = parseFloat(hhVal), mag = parseFloat(magVal);
+  if (mag > hh) { toast('Magnitude cannot exceed number of households.'); return; }
+  const existing = POVERTY_RECORDS.find(r => r.barangay === barangay && r.year === year);
+  if (existing) { existing.hh = hh; existing.mag = mag; }
+  else { POVERTY_RECORDS.push({ barangay, year, hh, mag }); }
+  document.getElementById('rec-hh').value = '';
+  document.getElementById('rec-mag').value = '';
+  document.getElementById('rec-pct').value = '';
+  toggleRecordForm();
+  renderPovertyRecords();
+  toast('Record saved.', 'success');
+}
+function deleteRecord(idx) {
+  POVERTY_RECORDS.splice(idx, 1);
+  renderPovertyRecords();
+  toast('Record removed.', 'success');
+}
+function recordProportion(r) {
+  if (r.hh && r.mag !== null && r.mag !== undefined) return (r.mag / r.hh * 100);
+  return null;
+}
+function renderPovertyRecords() {
+  const sorted = [...POVERTY_RECORDS].sort((a, b) => a.barangay.localeCompare(b.barangay) || a.year - b.year);
+  document.getElementById('record-table-body').innerHTML = sorted.map(r => {
+    const pct = recordProportion(r);
+    const realIdx = POVERTY_RECORDS.indexOf(r);
+    return `<tr>
       <td><strong>${r.barangay}</strong></td>
       <td>${r.year}</td>
       <td>${(r.hh ?? r.hh === 0) ? r.hh : '<span class="muted-cell">…</span>'}</td>
@@ -2144,48 +886,163 @@
       <td>${pct !== null ? pct.toFixed(2) + '%' : '<span class="muted-cell">…</span>'}</td>
       <td><button class="icon-btn danger" onclick="deleteRecord(${realIdx})" title="Delete record" aria-label="Delete record">🗑</button></td>
     </tr>`;
-            }).join('') || `<tr><td colspan="6" style="text-align:center;color:var(--ink3);padding:24px;">No records yet — use the add button above to enter historical data.</td></tr>`;
-        }
+  }).join('') || `<tr><td colspan="6" style="text-align:center;color:var(--ink3);padding:24px;">No records yet — use the add button above to enter historical data.</td></tr>`;
+}
 
-        // ── MAPS ──
-        let dashMap, fullMap;
-        function buildMap(elId) {
-            const m = L.map(elId, { zoomControl: true, scrollWheelZoom: true }).setView([8.3648, 124.8600], 12);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                attribution: '© <a href="https://carto.com/attributions">CARTO</a> © OpenStreetMap contributors', maxZoom: 19, subdomains: 'abcd'
-            }).addTo(m);
-            BARANGAYS.forEach(b => {
-                L.circleMarker([b.lat, b.lng], {
-                    radius: 9, color: '#fff', weight: 2, fillColor: LEVEL_COLOR[b.level], fillOpacity: 0.9
-                }).addTo(m).bindPopup(`<b>${b.name}</b><br>${b.level} poverty · ${b.pct}%${b.pilot ? '<br><em style="color:#1f6b34">Pilot barangay</em>' : ''}`);
-            });
-            return m;
-        }
-        function initMaps() {
-            if (!dashMap) dashMap = buildMap('dash-map');
-            if (!fullMap) fullMap = buildMap('full-map');
-            setTimeout(() => { dashMap.invalidateSize(); fullMap.invalidateSize(); }, 100);
-        }
+/* ════════ LEAFLET MAP (single shared implementation) ════════ */
+const MAPS = {};
+const MANOLO_CENTER = [8.3648, 124.8600]; // approximate municipal center; verify for formal use
+const BARANGAY_GEOJSON = null; // optional official barangay-boundary GeoJSON
 
-        // ── TOAST ──
-        function toast(msg, type = 'info') {
-            const wrap = document.getElementById('toast-wrap');
-            const t = document.createElement('div');
-            t.className = 'toast ' + type;
-            t.textContent = msg;
-            wrap.appendChild(t);
-            setTimeout(() => t.remove(), 3100);
-        }
-        // ── INIT ──
-        ensureAdminSafety();
-        renderStats();
-        renderTop5();
-        renderUpdates();
-        renderBarangays();
-        renderPovertyData();
-        renderPovertyRecords();
-        window.addEventListener('resize', () => { if (dashMap) dashMap.invalidateSize(); if (fullMap) fullMap.invalidateSize(); });
-    </script>
+// Esri World Street Map tiles. This endpoint does not use the blocked OSM standard tile endpoint.
+// Keep attribution visible and check the provider's terms for your deployment/use.
+const MAP_TILES = {
+  url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+  opts: {
+    maxZoom: 19,
+    attribution: 'Tiles &copy; Esri &mdash; Sources: Esri, HERE, Garmin, USGS, Intermap, INCREMENT P, NRCan, Esri Japan, METI, Esri China (Hong Kong), Esri Korea, Esri (Thailand), NGCC, (c) OpenStreetMap contributors, and the GIS User Community'
+  }
+};
+
+function povertyPinIcon(color) {
+  return L.divIcon({
+    className: 'poverty-pin',
+    iconSize: [32, 42],
+    iconAnchor: [16, 41],
+    popupAnchor: [0, -36],
+    tooltipAnchor: [0, -34],
+    html: `<svg width="32" height="42" viewBox="0 0 32 42" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+      <path d="M16 1C7.7 1 1 7.7 1 16c0 10 15 25 15 25s15-15 15-25C31 7.7 24.3 1 16 1Z" fill="${color}" stroke="#fff" stroke-width="2"/>
+      <circle cx="16" cy="15" r="5" fill="#fff"/>
+    </svg>`
+  });
+}
+
+function renderMap(id) {
+  const el = document.getElementById(id);
+  // Wait until the page/card is visible and has measurable dimensions.
+  if (!el || el.clientWidth === 0 || el.clientHeight === 0) return;
+
+  if (!MAPS[id]) {
+    const map = L.map(id, {
+      center: MANOLO_CENTER,
+      zoom: 11,
+      zoomControl: true,
+      scrollWheelZoom: true
+    });
+    const tileLayer = L.tileLayer(MAP_TILES.url, MAP_TILES.opts).addTo(map);
+    const errorNotice = L.control({ position: 'topright' });
+    errorNotice.onAdd = function () {
+      const div = L.DomUtil.create('div', 'map-tile-error');
+      div.textContent = 'Map tiles could not load. Check your internet connection or tile-provider access.';
+      this._container = div;
+      return div;
+    };
+    errorNotice.addTo(map);
+    let tileErrors = 0;
+    tileLayer.on('tileerror', () => {
+      tileErrors++;
+      if (tileErrors >= 3 && errorNotice._container) errorNotice._container.style.display = 'block';
+    });
+    tileLayer.on('tileload', () => {
+      tileErrors = Math.max(0, tileErrors - 1);
+      if (tileErrors < 3 && errorNotice._container) errorNotice._container.style.display = 'none';
+    });
+    MAPS[id] = { map, layer: L.layerGroup().addTo(map) };
+    if (window.ResizeObserver) {
+      const observer = new ResizeObserver(() => map.invalidateSize());
+      observer.observe(el);
+      MAPS[id].observer = observer;
+    }
+  }
+
+  const { map, layer } = MAPS[id];
+  map.invalidateSize();
+  layer.clearLayers();
+
+  if (BARANGAY_GEOJSON) {
+    L.geoJSON(BARANGAY_GEOJSON, {
+      style: f => {
+        const b = BARANGAYS.find(x => x.name.toLowerCase() === String(f.properties.name).toLowerCase());
+        return { color: '#0d3b1e', weight: 1.2, fillColor: b ? LEVEL_COLOR[b.level] : '#9aa79b', fillOpacity: b ? 0.35 : 0.1 };
+      },
+      onEachFeature: (f, l) => l.bindTooltip(f.properties.name, { sticky: true })
+    }).addTo(layer);
+  }
+
+  const points = [];
+  BARANGAYS.forEach(b => {
+    if (!Number.isFinite(Number(b.lat)) || !Number.isFinite(Number(b.lng))) return;
+    const lat = Number(b.lat), lng = Number(b.lng);
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return;
+
+    const color = LEVEL_COLOR[b.level] || '#a4322a';
+    const marker = L.marker([lat, lng], {
+      icon: povertyPinIcon(color),
+      keyboard: true,
+      title: `${b.name} — ${Number(b.pct).toFixed(2)}% poverty incidence`,
+      alt: `Map pin for ${b.name}`,
+      riseOnHover: true
+    }).addTo(layer);
+
+    const verificationNote = b.verified
+      ? ''
+      : '<br><span style="color:#a4322a;font-weight:600">Coordinates are approximate and need verification.</span>';
+    marker.bindPopup(
+      `<div style="min-width:185px"><strong>${b.name}</strong><hr style="margin:6px 0;border:0;border-top:1px solid #e0ddd0">` +
+      `<div>Poverty incidence: <strong>${Number(b.pct).toFixed(2)}%</strong></div>` +
+      `<div>Classification: <strong>${b.level}</strong></div>` +
+      `<div>Households: ${b.hh}</div>` +
+      (b.pilot ? '<div style="color:#1f6b34;font-weight:600;margin-top:4px">Pilot barangay</div>' : '') +
+      verificationNote + '</div>'
+    );
+    marker.bindTooltip(`${b.name} · ${Number(b.pct).toFixed(2)}%`, {
+      direction: 'top',
+      offset: [0, -30],
+      className: 'bgy-label',
+      sticky: true
+    });
+    points.push([lat, lng]);
+  });
+
+  if (points.length > 1) {
+    map.fitBounds(points, { padding: [45, 45], maxZoom: 12 });
+  } else {
+    map.setView(points[0] || MANOLO_CENTER, 11);
+  }
+}
+
+function fixMapSizes() {
+  Object.values(MAPS).forEach(({ map }) => map.invalidateSize());
+}
+function initMaps() { refreshMaps(); }
+function refreshMaps() {
+  renderMap('dash-map');
+  renderMap('full-map');
+  // A second size pass handles layout animation and flex/grid recalculation.
+  requestAnimationFrame(() => fixMapSizes());
+}
+window.addEventListener('resize', fixMapSizes);
+
+// ── TOAST ──
+function toast(msg, type = 'info') {
+  const wrap = document.getElementById('toast-wrap');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  wrap.appendChild(t);
+  setTimeout(() => t.remove(), 3100);
+}
+
+// ── INIT ──
+ensureAdminSafety();
+renderStats();
+renderTop5();
+renderUpdates();
+renderBarangays();
+renderPovertyData();
+renderPovertyRecords();
+</script>
 </body>
 
 </html>
