@@ -362,6 +362,19 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:
             </div>
           </div>
 
+          <!-- FUTURE TREND FORECAST (Administrator only) -->
+          <div id="forecast-card" style="display:none;padding:14px 18px;border-bottom:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
+              <div>
+                <div class="panel-box-title">Future Trend Forecast</div>
+                <div class="panel-box-sub">Linear regression projection of poor household proportion</div>
+              </div>
+              <select class="filter-select" id="forecast-bgy" onchange="renderForecast()"></select>
+            </div>
+            <div id="forecast-chart"></div>
+            <div id="forecast-note" style="font-size:11.5px;color:var(--ink2);margin-top:6px;line-height:1.5;"></div>
+          </div>
+
           <div class="table-scroll">
             <table class="data-table" style="box-shadow:none;">
               <thead><tr><th>Barangay</th><th>Year</th><th>No. of HH</th><th>Poor HH Mag.</th><th>Poor HH %</th><th></th></tr></thead>
@@ -515,7 +528,6 @@ html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:
 <script>
 // ── BARANGAY DATA (5 pilot barangays, all High poverty) ──
 // Coordinates are APPROXIMATE (verified:false) until confirmed on openstreetmap.org
-// (right-click the barangay center > "Show address" / copy lat,lng), then set verified:true.
 // Minsuro and Ticala values are PLACEHOLDERS — replace with real survey data.
 // "level" is computed from pct by classify() below.
 const BARANGAYS = [
@@ -545,7 +557,8 @@ let POVERTY_RECORDS = [
 // ── ACCOUNTS ──
 let ACCOUNTS = [
   { username: 'admin',    password: 'admin123',    role: 'Administrator', barangay: 'Municipal-wide', status: 'Active' },
-  { username: 'lgustaff', password: 'lgustaff123', role: 'LGU Staff',     barangay: 'Municipal-wide', status: 'Active' }
+  { username: 'lgustaff', password: 'lgustaff123', role: 'LGU Staff',     barangay: 'Municipal-wide', status: 'Active' },
+  { username: 'barangay', password: 'barangay123', role: 'Barangay',      barangay: 'Municipal-wide', status: 'Active' }
 ];
 let currentUser = null;
 
@@ -554,7 +567,7 @@ let currentUser = null;
 const ROLE_VIEWS = {
   'Administrator': ['dashboard', 'barangays', 'poverty-data', 'map-view', 'reports', 'users', 'settings'],
   'LGU Staff':     ['dashboard', 'poverty-data', 'map-view'],
-  'Barangay':      ['dashboard', 'poverty-data', 'map-view']
+  'Barangay':      ['dashboard', 'poverty-data', 'map-view', 'reports']
 };
 function canView(name) {
   return !!currentUser && (ROLE_VIEWS[currentUser.role] || []).includes(name);
@@ -619,6 +632,10 @@ function applyRolePermissions() {
   const restrictedNote = document.getElementById('acc-restricted-note');
   if (adminTools) adminTools.style.display = admin ? 'block' : 'none';
   if (restrictedNote) restrictedNote.style.display = admin ? 'none' : 'block';
+  // Forecast graph is for Administrators only
+  const fc = document.getElementById('forecast-card');
+  if (fc) fc.style.display = admin ? 'block' : 'none';
+  renderForecast();
 }
 
 // ── ACCOUNT MANAGEMENT ──
@@ -887,6 +904,63 @@ function renderPovertyRecords() {
       <td><button class="icon-btn danger" onclick="deleteRecord(${realIdx})" title="Delete record" aria-label="Delete record">🗑</button></td>
     </tr>`;
   }).join('') || `<tr><td colspan="6" style="text-align:center;color:var(--ink3);padding:24px;">No records yet — use the add button above to enter historical data.</td></tr>`;
+  renderForecast();
+}
+
+// ── FUTURE TREND FORECAST (Administrator only) ──
+function renderForecast() {
+  const card = document.getElementById('forecast-card');
+  if (!card || !isAdmin()) return;
+  const sel = document.getElementById('forecast-bgy');
+  const prev = sel.value;
+  sel.innerHTML = BARANGAYS.map(b => `<option value="${b.name}">${b.name}</option>`).join('');
+  if (BARANGAYS.some(b => b.name === prev)) sel.value = prev;
+  const name = sel.value;
+  const chart = document.getElementById('forecast-chart');
+  const note = document.getElementById('forecast-note');
+
+  const pts = POVERTY_RECORDS.filter(r => r.barangay === name && r.hh > 0)
+    .map(r => ({ x: r.year, y: r.mag / r.hh * 100 })).sort((a, b) => a.x - b.x);
+  if (pts.length < 2) {
+    chart.innerHTML = '<div style="padding:22px;text-align:center;color:var(--ink3);font-size:12.5px;background:var(--surface2);border-radius:10px;">Add at least 2 survey years for this barangay to generate a forecast.</div>';
+    note.textContent = '';
+    return;
+  }
+
+  // Least-squares linear regression
+  const n = pts.length;
+  const mx = pts.reduce((s, p) => s + p.x, 0) / n, my = pts.reduce((s, p) => s + p.y, 0) / n;
+  const sxx = pts.reduce((s, p) => s + (p.x - mx) ** 2, 0);
+  const sxy = pts.reduce((s, p) => s + (p.x - mx) * (p.y - my), 0);
+  const slope = sxy / sxx, icpt = my - slope * mx;
+  const clamp = v => Math.max(0, Math.min(100, v));
+  const lastX = pts[n - 1].x;
+  const fut = [1, 2, 3].map(i => ({ x: lastX + 2 * i, y: clamp(icpt + slope * (lastX + 2 * i)) })); // biennial surveys
+
+  const all = pts.concat(fut);
+  const W = 560, H = 230, L = 40, R = 16, T = 14, B = 30;
+  const xmin = all[0].x, xmax = all[all.length - 1].x;
+  const sx = x => L + (x - xmin) / (xmax - xmin) * (W - L - R);
+  const sy = y => T + (1 - y / 100) * (H - T - B);
+  const path = arr => arr.map((p, i) => `${i ? 'L' : 'M'}${sx(p.x).toFixed(1)},${sy(p.y).toFixed(1)}`).join(' ');
+  const grid = [0, 25, 50, 75, 100].map(v =>
+    `<line x1="${L}" x2="${W - R}" y1="${sy(v)}" y2="${sy(v)}" stroke="#e0ddd0"/><text x="${L - 6}" y="${sy(v) + 4}" font-size="10" text-anchor="end" fill="#93a294">${v}%</text>`).join('');
+  const dots = (arr, color, hollow) => arr.map(p =>
+    `<circle cx="${sx(p.x)}" cy="${sy(p.y)}" r="4.5" fill="${hollow ? '#fff' : color}" stroke="${color}" stroke-width="2"/>
+     <text x="${sx(p.x)}" y="${sy(p.y) - 9}" font-size="10" font-weight="600" text-anchor="middle" fill="${color}">${p.y.toFixed(1)}%</text>
+     <text x="${sx(p.x)}" y="${H - 10}" font-size="10" text-anchor="middle" fill="#5c6a5e">${p.x}</text>`).join('');
+
+  chart.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">
+    ${grid}
+    <rect x="${sx(lastX)}" y="${T}" width="${W - R - sx(lastX)}" height="${H - T - B}" fill="rgba(185,134,47,.08)"/>
+    <path d="${path(pts)}" fill="none" stroke="#1f6b34" stroke-width="2.5"/>
+    <path d="${path([pts[n - 1]].concat(fut))}" fill="none" stroke="#b9862f" stroke-width="2.5" stroke-dasharray="6 5"/>
+    ${dots(pts, '#1f6b34', false)}${dots(fut, '#b9862f', true)}
+  </svg>
+  <div style="display:flex;gap:14px;font-size:11px;color:var(--ink2);margin-top:4px;">
+    <span><b style="color:#1f6b34">━</b> Recorded</span><span><b style="color:#b9862f">╌</b> Forecast</span>
+  </div>`;
+  note.textContent = `Trend: ${slope >= 0 ? '+' : ''}${slope.toFixed(2)} percentage points per year, based on ${n} survey year${n > 1 ? 's' : ''}. Projections are estimates and become more reliable as more survey years are added.`;
 }
 
 /* ════════ LEAFLET MAP (single shared implementation) ════════ */
@@ -894,8 +968,7 @@ const MAPS = {};
 const MANOLO_CENTER = [8.3648, 124.8600]; // approximate municipal center; verify for formal use
 const BARANGAY_GEOJSON = null; // optional official barangay-boundary GeoJSON
 
-// Esri World Street Map tiles. This endpoint does not use the blocked OSM standard tile endpoint.
-// Keep attribution visible and check the provider's terms for your deployment/use.
+// Esri World Street Map tiles. Keep attribution visible and check the provider's terms for your deployment/use.
 const MAP_TILES = {
   url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
   opts: {
