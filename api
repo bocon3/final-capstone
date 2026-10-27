@@ -1,0 +1,158 @@
+<?php
+// ComBaTy API — place in C:\xampp\htdocs\combaty\api.php
+session_start();
+header('Content-Type: application/json; charset=utf-8');
+
+const DB_HOST = 'localhost';
+const DB_NAME = 'combaty';
+const DB_USER = 'root';   // XAMPP default
+const DB_PASS = '';       // XAMPP default (empty)
+
+function out($data, int $code = 200) { http_response_code($code); echo json_encode($data); exit; }
+function fail(string $msg, int $code = 400) { out(['error' => $msg], $code); }
+
+try {
+  $pdo = new PDO('mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4', DB_USER, DB_PASS, [
+    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+  ]);
+} catch (Throwable $e) {
+  fail('Database connection failed. Start MySQL in XAMPP and import schema.sql.', 500);
+}
+
+// Create default accounts (hashed) the first time the API runs
+if ((int)$pdo->query('SELECT COUNT(*) FROM users')->fetchColumn() === 0) {
+  $seed = $pdo->prepare('INSERT INTO users (username, password_hash, role, assigned_barangay) VALUES (?,?,?,?)');
+  foreach ([
+    ['admin',    'admin123',    'Administrator'],
+    ['lgustaff', 'lgustaff123', 'LGU Staff'],
+    ['barangay', 'barangay123', 'Barangay'],
+  ] as [$u, $p, $r]) $seed->execute([$u, password_hash($p, PASSWORD_DEFAULT), $r, 'Municipal-wide']);
+}
+
+$action = $_GET['action'] ?? '';
+$in = json_decode(file_get_contents('php://input'), true) ?: [];
+
+function currentUser() { return $_SESSION['user'] ?? null; }
+function requireLogin() { if (!currentUser()) fail('Please log in.', 401); }
+function requireAdmin() { requireLogin(); if (currentUser()['role'] !== 'Administrator') fail('Only Administrator accounts can do that.', 403); }
+function activeAdmins(PDO $pdo): int { return (int)$pdo->query("SELECT COUNT(*) FROM users WHERE role='Administrator' AND status='Active'")->fetchColumn(); }
+
+try {
+  switch ($action) {
+
+    // ── AUTH ──
+    case 'login': {
+      $st = $pdo->prepare('SELECT * FROM users WHERE username = ?');
+      $st->execute([trim($in['username'] ?? '')]);
+      $u = $st->fetch();
+      if (!$u || !password_verify($in['password'] ?? '', $u['password_hash'])) fail('Invalid username or password.', 401);
+      if ($u['status'] !== 'Active') fail('This account has been suspended. Contact the administrator.', 403);
+      session_regenerate_id(true);
+      $_SESSION['user'] = ['id' => (int)$u['id'], 'username' => $u['username'], 'role' => $u['role'], 'barangay' => $u['assigned_barangay']];
+      out(['user' => $_SESSION['user']]);
+    }
+    case 'logout': session_destroy(); out(['ok' => true]);
+    case 'me': out(['user' => currentUser()]);
+
+    // ── BARANGAYS ──
+    case 'barangays': {
+      requireLogin();
+      $rows = $pdo->query('SELECT * FROM barangays ORDER BY id')->fetchAll();
+      foreach ($rows as &$r) {
+        $r['id'] = (int)$r['id']; $r['pct'] = (float)$r['pct']; $r['hh'] = (int)$r['hh'];
+        $r['lat'] = (float)$r['lat']; $r['lng'] = (float)$r['lng'];
+        $r['pilot'] = (bool)$r['pilot']; $r['verified'] = (bool)$r['verified'];
+      }
+      out($rows);
+    }
+    case 'barangay_add': {
+      requireLogin();
+      $name = trim($in['name'] ?? '');
+      if ($name === '') fail('Please enter a barangay name.');
+      foreach (['pct', 'hh', 'lat', 'lng'] as $k) if (!isset($in[$k]) || !is_numeric($in[$k])) fail('Poverty incidence, households, and coordinates are required.');
+      if ($in['pct'] < 0 || $in['pct'] > 100) fail('Poverty incidence must be between 0 and 100.');
+      $dup = $pdo->prepare('SELECT 1 FROM barangays WHERE name = ?'); $dup->execute([$name]);
+      if ($dup->fetch()) fail('That barangay is already tracked.', 409);
+      $pdo->prepare('INSERT INTO barangays (name,pct,hh,lat,lng,income,housing,services) VALUES (?,?,?,?,?,?,?,?)')
+          ->execute([$name, $in['pct'], (int)$in['hh'], $in['lat'], $in['lng'],
+                     in_array($in['income'] ?? '', ['Low','Moderate','High']) ? $in['income'] : 'Low',
+                     in_array($in['housing'] ?? '', ['Poor','Fair','Good']) ? $in['housing'] : 'Poor',
+                     in_array($in['services'] ?? '', ['Limited','Moderate','Full']) ? $in['services'] : 'Limited']);
+      out(['ok' => true]);
+    }
+    case 'barangay_delete': {
+      requireLogin();
+      $pdo->prepare('DELETE FROM barangays WHERE name = ?')->execute([$in['name'] ?? '']);
+      out(['ok' => true]);
+    }
+
+    // ── HISTORICAL RECORDS ──
+    case 'records': {
+      requireLogin();
+      $rows = $pdo->query('SELECT r.id, b.name AS barangay, r.year, r.hh, r.mag FROM poverty_records r JOIN barangays b ON b.id = r.barangay_id ORDER BY b.name, r.year')->fetchAll();
+      foreach ($rows as &$r) { $r['id'] = (int)$r['id']; $r['year'] = (int)$r['year']; $r['hh'] = (int)$r['hh']; $r['mag'] = (int)$r['mag']; }
+      out($rows);
+    }
+    case 'record_save': {
+      requireLogin();
+      $hh = (int)($in['hh'] ?? -1); $mag = (int)($in['mag'] ?? -1); $year = (int)($in['year'] ?? 0);
+      if ($hh < 0 || $mag < 0 || $year < 1990) fail('Households, poor HH magnitude and year are required.');
+      if ($mag > $hh) fail('Magnitude cannot exceed number of households.');
+      $b = $pdo->prepare('SELECT id FROM barangays WHERE name = ?'); $b->execute([$in['barangay'] ?? '']);
+      $bid = $b->fetchColumn();
+      if (!$bid) fail('Barangay not found.', 404);
+      $pdo->prepare('INSERT INTO poverty_records (barangay_id, year, hh, mag) VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE hh = VALUES(hh), mag = VALUES(mag)')
+          ->execute([$bid, $year, $hh, $mag]);
+      out(['ok' => true]);
+    }
+    case 'record_delete': {
+      requireLogin();
+      $pdo->prepare('DELETE FROM poverty_records WHERE id = ?')->execute([(int)($in['id'] ?? 0)]);
+      out(['ok' => true]);
+    }
+
+    // ── USERS (Administrator only, except listing) ──
+    case 'users': {
+      requireLogin();
+      $rows = $pdo->query('SELECT username, role, assigned_barangay AS barangay, status FROM users ORDER BY id')->fetchAll();
+      out($rows);
+    }
+    case 'user_create': {
+      requireAdmin();
+      $u = trim($in['username'] ?? ''); $p = trim($in['password'] ?? '');
+      $role = $in['role'] ?? '';
+      if ($u === '' || $p === '') fail('Username and password are required.');
+      if (!in_array($role, ['Barangay', 'LGU Staff'])) fail('Invalid role.');
+      $dup = $pdo->prepare('SELECT 1 FROM users WHERE username = ?'); $dup->execute([$u]);
+      if ($dup->fetch()) fail('That username already exists.', 409);
+      $pdo->prepare('INSERT INTO users (username, password_hash, role, assigned_barangay) VALUES (?,?,?,?)')
+          ->execute([$u, password_hash($p, PASSWORD_DEFAULT), $role, trim($in['barangay'] ?? '') ?: 'Municipal-wide']);
+      out(['ok' => true]);
+    }
+    case 'user_toggle': {
+      requireAdmin();
+      $st = $pdo->prepare('SELECT * FROM users WHERE username = ?'); $st->execute([$in['username'] ?? '']);
+      $t = $st->fetch();
+      if (!$t) fail('Account not found.', 404);
+      if ($t['role'] === 'Administrator' && $t['status'] === 'Active' && activeAdmins($pdo) <= 1) fail('At least one active Administrator account must remain.');
+      $new = $t['status'] === 'Active' ? 'Suspended' : 'Active';
+      $pdo->prepare('UPDATE users SET status = ? WHERE id = ?')->execute([$new, $t['id']]);
+      out(['status' => $new]);
+    }
+    case 'user_delete': {
+      requireAdmin();
+      $st = $pdo->prepare('SELECT * FROM users WHERE username = ?'); $st->execute([$in['username'] ?? '']);
+      $t = $st->fetch();
+      if (!$t) fail('Account not found.', 404);
+      if ($t['id'] == currentUser()['id']) fail('You cannot delete the account you are currently signed in with.');
+      if ($t['role'] === 'Administrator' && (int)$pdo->query("SELECT COUNT(*) FROM users WHERE role='Administrator'")->fetchColumn() <= 1) fail('At least one Administrator account must remain.');
+      $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$t['id']]);
+      out(['ok' => true]);
+    }
+
+    default: fail('Unknown action.', 404);
+  }
+} catch (Throwable $e) {
+  fail('Server error: ' . $e->getMessage(), 500);
+}
