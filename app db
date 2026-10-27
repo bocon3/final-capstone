@@ -1,0 +1,162 @@
+/* ComBaTy — connects index.html to the MySQL database through api.php.
+   Add this line in index.html, right before </body> (after the main <script> block):
+   <script src="app-db.js"></script>
+   It replaces the in-memory functions with versions that save to the database. */
+
+const API_URL = 'api.php';
+
+async function api(action, data) {
+  const opts = { credentials: 'same-origin' };
+  if (data !== undefined) {
+    opts.method = 'POST';
+    opts.headers = { 'Content-Type': 'application/json' };
+    opts.body = JSON.stringify(data);
+  }
+  const res = await fetch(`${API_URL}?action=${action}`, opts);
+  let json = {};
+  try { json = await res.json(); } catch (e) { /* not JSON */ }
+  if (!res.ok) throw new Error(json.error || 'Request failed');
+  return json;
+}
+
+// ── LOAD EVERYTHING FROM THE DATABASE ──
+async function loadData() {
+  const [b, r, u] = await Promise.all([api('barangays'), api('records'), api('users')]);
+  BARANGAYS.length = 0;
+  b.forEach(x => { x.level = classify(x.pct); BARANGAYS.push(x); });
+  POVERTY_RECORDS = r;
+  ACCOUNTS = u;
+  refreshAll();
+  renderUsersView();
+}
+
+async function startSession(user) {
+  currentUser = user;
+  document.getElementById('sb-username').textContent = user.username;
+  document.getElementById('sb-userrole').textContent = user.role;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').classList.add('active');
+  applyRolePermissions();
+  showView('dashboard');
+  try { await loadData(); } catch (e) { toast(e.message); }
+  setTimeout(initMaps, 60);
+}
+
+// ── LOGIN / LOGOUT ──
+async function doLogin() {
+  const u = document.getElementById('login-user').value.trim();
+  const p = document.getElementById('login-pass').value.trim();
+  const err = document.getElementById('login-error');
+  if (!u || !p) { err.textContent = 'Please enter both a username and password.'; err.classList.add('show'); return; }
+  try {
+    const res = await api('login', { username: u, password: p });
+    err.classList.remove('show');
+    startSession(res.user);
+  } catch (e) {
+    err.textContent = e.message; err.classList.add('show');
+  }
+}
+async function doLogout() {
+  try { await api('logout', {}); } catch (e) {}
+  currentUser = null;
+  document.getElementById('app').classList.remove('active');
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-pass').type = 'password';
+  document.getElementById('pw-toggle').textContent = '👁';
+  document.getElementById('pw-toggle').setAttribute('aria-label', 'Show password');
+}
+
+// ── ACCOUNTS ──
+async function createAccount() {
+  const username = document.getElementById('new-acc-username').value.trim();
+  const password = document.getElementById('new-acc-password').value.trim();
+  const role = document.getElementById('new-acc-role').value;
+  const barangay = document.getElementById('new-acc-barangay').value.trim();
+  try {
+    await api('user_create', { username, password, role, barangay });
+    ['new-acc-username', 'new-acc-password', 'new-acc-barangay'].forEach(id => document.getElementById(id).value = '');
+    toggleCreateAccountForm();
+    ACCOUNTS = await api('users'); renderUsersView();
+    toast('Account created successfully.', 'success');
+  } catch (e) { toast(e.message); }
+}
+async function toggleAccountStatus(username) {
+  try {
+    const res = await api('user_toggle', { username });
+    ACCOUNTS = await api('users'); renderUsersView();
+    toast('Account ' + (res.status === 'Active' ? 'activated' : 'suspended') + '.', 'success');
+  } catch (e) { toast(e.message); }
+}
+async function deleteAccount(username) {
+  try {
+    await api('user_delete', { username });
+    ACCOUNTS = await api('users'); renderUsersView();
+    toast('Account removed.', 'success');
+  } catch (e) { toast(e.message); }
+}
+
+// ── BARANGAYS ──
+async function saveBarangay() {
+  const g = id => document.getElementById(id).value;
+  try {
+    await api('barangay_add', {
+      name: g('bg-name').trim(), pct: g('bg-pct'), hh: g('bg-hh'), lat: g('bg-lat'), lng: g('bg-lng'),
+      income: g('bg-income'), housing: g('bg-housing'), services: g('bg-services')
+    });
+    ['bg-name', 'bg-pct', 'bg-hh', 'bg-lat', 'bg-lng'].forEach(id => document.getElementById(id).value = '');
+    toggleBarangayForm();
+    await loadData();
+    toast('Barangay added.', 'success');
+  } catch (e) { toast(e.message); }
+}
+async function deleteBarangay(name) {
+  if (!confirm('Remove ' + name + ' from the system?')) return;
+  try {
+    await api('barangay_delete', { name });
+    await loadData();
+    toast('Barangay removed.', 'success');
+  } catch (e) { toast(e.message); }
+}
+
+// ── HISTORICAL RECORDS ──
+async function saveRecord() {
+  const g = id => document.getElementById(id).value;
+  if (g('rec-hh') === '' || g('rec-mag') === '') { toast('Households and poor HH magnitude are required.'); return; }
+  try {
+    await api('record_save', { barangay: g('rec-barangay'), year: g('rec-year'), hh: g('rec-hh'), mag: g('rec-mag') });
+    ['rec-hh', 'rec-mag', 'rec-pct'].forEach(id => document.getElementById(id).value = '');
+    toggleRecordForm();
+    POVERTY_RECORDS = await api('records');
+    renderPovertyRecords();
+    toast('Record saved.', 'success');
+  } catch (e) { toast(e.message); }
+}
+async function deleteRecord(id) {
+  try {
+    await api('record_delete', { id });
+    POVERTY_RECORDS = await api('records');
+    renderPovertyRecords();
+    toast('Record removed.', 'success');
+  } catch (e) { toast(e.message); }
+}
+// Same table as before, but delete buttons use the database id
+function renderPovertyRecords() {
+  const sorted = [...POVERTY_RECORDS].sort((a, b) => a.barangay.localeCompare(b.barangay) || a.year - b.year);
+  document.getElementById('record-table-body').innerHTML = sorted.map(r => {
+    const pct = recordProportion(r);
+    return `<tr>
+      <td><strong>${r.barangay}</strong></td>
+      <td>${r.year}</td>
+      <td>${r.hh}</td>
+      <td>${r.mag}</td>
+      <td>${pct !== null ? pct.toFixed(2) + '%' : '<span class="muted-cell">…</span>'}</td>
+      <td><button class="icon-btn danger" onclick="deleteRecord(${r.id})" title="Delete record" aria-label="Delete record">🗑</button></td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="6" style="text-align:center;color:var(--ink3);padding:24px;">No records yet — use the add button above to enter historical data.</td></tr>`;
+  renderForecast();
+}
+
+// ── KEEP USERS LOGGED IN AFTER A PAGE REFRESH ──
+api('me').then(res => { if (res.user) startSession(res.user); }).catch(() => {});

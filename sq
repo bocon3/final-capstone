@@ -1,0 +1,53 @@
+-- ComBaTy database for XAMPP (MySQL / MariaDB)
+-- Import via phpMyAdmin: http://localhost/phpmyadmin  ->  Import  ->  choose this file
+-- User accounts are created automatically (with hashed passwords) the first time api.php runs.
+
+CREATE DATABASE IF NOT EXISTS combaty CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE combaty;
+
+CREATE TABLE IF NOT EXISTS users (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(50) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  role ENUM('Administrator','LGU Staff','Barangay') NOT NULL,
+  assigned_barangay VARCHAR(100) NOT NULL DEFAULT 'Municipal-wide',
+  status ENUM('Active','Suspended') NOT NULL DEFAULT 'Active',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS barangays (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL UNIQUE,
+  pct DECIMAL(5,2) NOT NULL,                 -- poverty incidence (%)
+  hh INT UNSIGNED NOT NULL,                  -- households surveyed
+  pilot TINYINT(1) NOT NULL DEFAULT 1,
+  lat DECIMAL(9,6) NOT NULL,
+  lng DECIMAL(9,6) NOT NULL,
+  verified TINYINT(1) NOT NULL DEFAULT 0,    -- coordinates verified?
+  income ENUM('Low','Moderate','High') NOT NULL DEFAULT 'Low',
+  housing ENUM('Poor','Fair','Good') NOT NULL DEFAULT 'Poor',
+  services ENUM('Limited','Moderate','Full') NOT NULL DEFAULT 'Limited',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS poverty_records (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  barangay_id INT UNSIGNED NOT NULL,
+  year SMALLINT UNSIGNED NOT NULL,
+  hh INT UNSIGNED NOT NULL,                  -- number of households
+  mag INT UNSIGNED NOT NULL,                 -- poor household magnitude
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_barangay_year (barangay_id, year),
+  CONSTRAINT fk_rec_barangay FOREIGN KEY (barangay_id) REFERENCES barangays(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Starting data (Minsuro and Ticala are placeholders; coordinates are approximate)
+INSERT IGNORE INTO barangays (name, pct, hh, pilot, lat, lng, verified, income, housing, services) VALUES
+('Minsuro',         45.00, 250, 1, 8.390000, 124.830000, 0, 'Low', 'Poor', 'Limited'),
+('Ticala',          42.00, 220, 1, 8.370000, 124.870000, 0, 'Low', 'Poor', 'Limited'),
+('Guilang-Guilang', 84.82, 412, 1, 8.374500, 124.846700, 0, 'Low', 'Poor', 'Limited'),
+('Santiago',        74.35, 389, 1, 8.351200, 124.880100, 0, 'Low', 'Poor', 'Limited'),
+('Maluco',          53.75, 165, 1, 8.329800, 124.848900, 0, 'Low', 'Poor', 'Limited');
+
+INSERT IGNORE INTO poverty_records (barangay_id, year, hh, mag)
+SELECT id, 2021, 303, 257 FROM barangays WHERE name = 'Guilang-Guilang';
