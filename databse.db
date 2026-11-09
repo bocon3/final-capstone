@@ -1,0 +1,171 @@
+/* db-bridge.js — connects the ComBaTy page to the database API.
+   Load it AFTER the main <script> (right before </body>). It replaces every function that
+   used to change the in-memory arrays so the change is saved in the database instead. */
+(function () {
+  const API = '/api';
+  let TOKEN = null;
+
+  async function api(path, method = 'GET', body, isAuthCall) {
+    const r = await fetch(API + path, {
+      method,
+      headers: { 'Content-Type': 'application/json', ...(TOKEN ? { Authorization: 'Bearer ' + TOKEN } : {}) },
+      body: body ? JSON.stringify(body) : undefined
+    });
+    let d = {}; try { d = await r.json(); } catch (e) {}
+    if (!r.ok) {
+      if (r.status === 401 && TOKEN && !isAuthCall) kick(d.error || 'Session expired. Please log in again.');
+      throw new Error(d.error || 'Server error (' + r.status + ')');
+    }
+    return d;
+  }
+
+  function resetUI() {
+    stopLive(true); cur = null; TOKEN = null;
+    document.body.classList.remove('staff'); $('bnav').innerHTML = '';
+    $('app').classList.remove('on'); $('login').style.display = 'flex';
+    $('lu').value = ''; $('lp').value = '';
+  }
+  function kick(msg) { resetUI(); $('lerr').textContent = msg; $('lerr').classList.add('show'); }
+
+  /* Pull everything this role may see from the database into the page's arrays */
+  async function sync() {
+    const d = await api('/bootstrap');
+    BARANGAYS.splice(0, BARANGAYS.length, ...d.barangays);
+    RECORDS = d.records; HOUSEHOLDS = d.households; LOGS = d.logs; NOTIFS = d.notifs;
+    if (d.accounts) { ACCOUNTS = d.accounts; cur = ACCOUNTS.find(a => a.username === d.me.username) || d.me; }
+    else cur = d.me;
+  }
+  async function refresh() {
+    await sync();
+    const a = document.querySelector('.view.act'); if (a) showView(a.id.slice(5));
+    badge();
+  }
+  const G = fn => async function (...a) { try { return await fn.apply(this, a); } catch (e) { toast(e.message || 'Something went wrong.'); } };
+
+  /* ── Login / logout ── */
+  window.login = async function () {
+    const u = $('lu').value.trim(), p = $('lp').value, e = $('lerr');
+    const fail = m => { e.textContent = m; e.classList.add('show'); };
+    if (!u || !p) return fail('Please enter both a username and password.');
+    try {
+      const r = await api('/login', 'POST', { username: u, password: p, phone: isPhone() }, true);
+      TOKEN = r.token; cur = r.user; await sync();
+    } catch (err) { TOKEN = null; cur = null; return fail(err.message); }
+    e.classList.remove('show');
+    document.body.classList.toggle('staff', cur.role === 'Brgy Staff');
+    updateUserUI();
+    $('chip').textContent = isAdmin() ? `${BARANGAYS.length} Barangays Tracked` : 'Brgy. ' + cur.barangay;
+    $('login').style.display = 'none'; $('app').classList.add('on');
+    buildNav(); showView(ROLE_VIEWS[cur.role][0]);
+  };
+  window.logout = async function () {
+    try { if (TOKEN) await api('/logout', 'POST', null, true); } catch (e) {}
+    resetUI();
+  };
+  window.logEvent = function (type, action) {           // used by GPS tracking / report generation
+    if (!TOKEN || !cur) return;
+    LOGS.unshift({ t: ts(), user: cur.username, role: cur.role, type, action });
+    api('/logs', 'POST', { type, action }).catch(() => {});
+  };
+
+  /* ── Profile ── */
+  window.saveProfile = G(async () => {
+    const n = $('pf-name').value.trim(), m = $('pf-mail').value.trim(), t = $('pf-tel').value.trim();
+    if (n.length < 2) { toast('Please enter your full name.'); return; }
+    if (m && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(m)) { toast('Enter a valid email address.'); return; }
+    if (t && !/^[0-9+()\-\s]{7,15}$/.test(t)) { toast('Enter a valid contact number.'); return; }
+    await api('/me', 'PUT', { fullName: n, position: $('pf-pos').value.trim(), email: m, phone: t, address: $('pf-addr').value.trim() });
+    await sync(); updateUserUI(); renderProfile(); toast('Profile updated.', 'ok');
+  });
+  window.savePassword = G(async () => {
+    const c = $('pw-cur').value, n = $('pw-new').value, f = $('pw-cf').value;
+    if (!c || !n || !f) { toast('Fill in all password fields.'); return; }
+    if (n.length < 6) { toast('New password must be at least 6 characters.'); return; }
+    if (n === c) { toast('New password must be different from the current one.'); return; }
+    if (n !== f) { toast('New passwords do not match.'); return; }
+    await api('/me/password', 'PUT', { current: c, next: n });
+    ['pw-cur', 'pw-new', 'pw-cf'].forEach(i => $(i).value = ''); toast('Password updated.', 'ok');
+  });
+
+  /* ── Admin: accounts ── */
+  window.createAcc = G(async () => {
+    const username = $('au').value.trim(), password = $('ap').value.trim();
+    if (!username || !password) { toast('Username and password are required.'); return; }
+    if (password.length < 6) { toast('Password must be at least 6 characters.'); return; }
+    await api('/accounts', 'POST', { username, password, role: $('ar').value, barangay: $('ab').value });
+    $('au').value = $('ap').value = ''; toggleAcc(); await refresh(); toast('Account created.', 'ok');
+  });
+  window.toggleAcct = G(async u => { await api('/accounts/' + encodeURIComponent(u) + '/toggle', 'PATCH'); await refresh(); });
+  window.delAcct = G(async u => {
+    if (!confirm('Delete account ' + u + '?')) return;
+    await api('/accounts/' + encodeURIComponent(u), 'DELETE'); await refresh();
+  });
+
+  /* ── Admin: records & barangays ── */
+  window.saveRec = G(async () => {
+    const barangay = $('rb').value, year = +$('ry').value, hh = parseFloat($('rh').value), mag = parseFloat($('rm').value);
+    if (!(hh > 0) || isNaN(mag)) { toast('Households and poor HH magnitude are required.'); return; }
+    if (mag > hh) { toast('Magnitude cannot exceed number of households.'); return; }
+    await api('/records', 'POST', { barangay, year, hh, mag });
+    $('rh').value = $('rm').value = ''; tog('rec-f'); await refresh(); toast('Record saved.', 'ok');
+  });
+  window.delRec = G(async i => {
+    const r = RECORDS[i]; if (!r) return;
+    await api('/records?barangay=' + encodeURIComponent(r.barangay) + '&year=' + r.year, 'DELETE');
+    await refresh(); toast('Record removed.', 'ok');
+  });
+  window.saveBgy = G(async () => {
+    const name = $('bn').value.trim(), pct = parseFloat($('bp').value), hh = parseInt($('bh').value, 10), lat = parseFloat($('bla').value), lng = parseFloat($('blo').value);
+    if (!name || [pct, hh, lat, lng].some(isNaN)) { toast('All fields are required.'); return; }
+    await api('/barangays', 'POST', { name, pct, hh, lat, lng });
+    ['bn', 'bp', 'bh', 'bla', 'blo'].forEach(i => $(i).value = ''); tog('bg-f'); await refresh(); toast('Barangay added.', 'ok');
+  });
+  window.delBgy = G(async n => {
+    if (!confirm('Remove ' + n + ' from the system?')) return;
+    await api('/barangays/' + encodeURIComponent(n), 'DELETE'); await refresh(); toast('Barangay removed.', 'ok');
+  });
+
+  /* ── Staff: household forms ── */
+  window.saveHH = G(async () => {
+    const v = f => $('h-' + f).value.trim(), id = $('h-id').value;
+    const d = { head: v('head'), address: v('addr'), members: parseInt(v('mem'), 10), income: parseFloat(v('inc')), occupation: v('occ'), education: $('h-edu').value, housing: $('h-hou').value, services: $('h-srv').value };
+    if (!d.head || !d.address || !(d.members > 0) || isNaN(d.income) || d.income < 0) { toast('Name, address, members and income are required.'); return; }
+    if (id) await api('/households/' + id, 'PUT', d); else await api('/households', 'POST', d);
+    $('hh-f').style.display = 'none'; await refresh(); toast('Household saved.', 'ok');
+  });
+  window.delHH = G(async id => {
+    if (!confirm('Remove household ' + id + '?')) return;
+    await api('/households/' + id, 'DELETE'); await refresh(); toast('Household removed.', 'ok');
+  });
+  window.submitDrafts = G(async () => {
+    if (!myHH().filter(editable).length) { toast('No drafts or returned forms to submit.'); return; }
+    await api('/households/submit', 'POST'); await refresh(); toast('Submitted to Barangay.', 'ok');
+  });
+  window.saveGeo = G(async () => {
+    if (!GEO.sel || !GEO.pending) { toast('Select a household and place a pin first.'); return; }
+    const h = HOUSEHOLDS.find(x => x.id === GEO.sel);
+    await api('/households/' + GEO.sel + '/geotag', 'PUT', { lat: GEO.pending[0], lng: GEO.pending[1], src: GEO.src });
+    GEO.pending = null; await refresh();
+    $('g-info').textContent = 'Geotag saved for ' + (h ? h.head : '') + '.'; toast('Geotag saved.', 'ok');
+  });
+
+  /* ── Barangay: review & notifications ── */
+  window.decide = G(async (id, st) => {
+    let remarks = '';
+    if (st === 'Returned') { const r = prompt('Reason for returning this form to staff:'); if (r === null) return; remarks = r.trim(); }
+    await api('/households/' + id + '/decision', 'PUT', { status: st, remarks });
+    await refresh(); toast('Form marked ' + st + '.', 'ok');
+  });
+  window.readAll = G(async () => { await api('/notifications/read-all', 'POST'); await refresh(); });
+
+  /* ── Auto-refresh so staff / barangay / admin see each other's changes (every 20 s) ── */
+  setInterval(async () => {
+    if (!TOKEN || document.hidden) return;
+    try {
+      await sync();
+      const a = document.querySelector('.view.act'), n = a && a.id.slice(5);
+      if (['notifications', 'brgy-dashboard', 'brgy-reports', 'forms', 'system-logs'].includes(n)) showView(n);
+      badge();
+    } catch (e) {}
+  }, 20000);
+})();
