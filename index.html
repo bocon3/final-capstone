@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="en"><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ComBaTy — Community-Based Poverty Mapping | Manolo Fortich, Bukidnon</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
 :root{--forest:#0d3b1e;--forest2:#1f6b34;--fd:rgba(31,107,52,.1);--gold:#b9862f;--gd:rgba(185,134,47,.12);--bg:#f5f4ee;--surface:#fff;--s2:#eef0e7;--border:#e0ddd0;--ink:#16201a;--ink2:#5c6a5e;--ink3:#93a294;--high:#a4322a;--hd:rgba(164,50,42,.1);--mod:#c76b1f;--md:rgba(199,107,31,.1);--low:#c9a227;--ld:rgba(201,162,39,.14);--vlow:#2f7d3c;--vd:rgba(47,125,60,.1);--r:16px;--rs:10px;--sh:0 2px 14px rgba(13,59,30,.07);--shl:0 10px 36px rgba(13,59,30,.14)}
 @media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0f1611;--surface:#17211a;--s2:#1e2b21;--border:#2b3b2f;--ink:#e8efe8;--ink2:#a9b8ab;--ink3:#7f9082;--fd:rgba(80,170,100,.16)}}
@@ -23,8 +22,9 @@ h1,h2,h3,.disp{font-family:'Spectral',serif}
 .in,.sel{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;font:inherit;font-size:14px;background:var(--s2);color:var(--ink);outline:none}
 .in:focus,.sel:focus{border-color:var(--forest2)}
 .grp{margin-bottom:14px}
-.btn{padding:10px 16px;border:none;border-radius:9px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;background:var(--forest);color:#fff}
+.btn{padding:10px 16px;border:none;border-radius:9px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;background:var(--forest);color:#fff;margin:0 4px 6px 0}
 .btn:hover{background:var(--forest2)}.btn.o{background:var(--surface);border:1.5px solid var(--border);color:var(--ink2)}.btn.full{width:100%;margin-top:6px;padding:12px;font-size:15px}
+.btn.live{background:#1a73e8}.btn.live:hover{background:#155ab6}.btn.stop{background:var(--high)}
 .ib{width:32px;height:32px;border-radius:8px;border:none;cursor:pointer;font-size:14px;background:var(--surface);border:1.5px solid var(--border);color:var(--ink2);margin-right:4px}
 .ib:hover{background:var(--s2)}.ib.d{background:var(--hd);color:var(--high);border-color:transparent}.ib:disabled{opacity:.35;cursor:not-allowed}
 .err{display:none;background:var(--hd);color:var(--high);font-size:12px;padding:9px 12px;border-radius:8px;margin-bottom:14px}.err.show{display:block}
@@ -51,6 +51,7 @@ h1,h2,h3,.disp{font-family:'Spectral',serif}
 .sc.high{background:linear-gradient(135deg,var(--high),#7d211b)}.sc.mod{background:linear-gradient(135deg,var(--mod),#96501a)}.sc.low{background:linear-gradient(135deg,var(--low),#9c7c1c)}.sc.vlow{background:linear-gradient(135deg,var(--vlow),#1f5a29)}.sc.gold{background:linear-gradient(135deg,var(--gold),#7d5a1b)}
 .sc small{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.9;display:block}.sc b{font:700 30px 'Spectral',serif;display:block;margin-top:4px}.sc span{font-size:10.5px;opacity:.85}
 .grid2{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:14px}
+.grid3{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
 .box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;margin-bottom:14px}
 .bh{padding:13px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .bh h3{font-size:14.5px}.bh small{font-size:11px;color:var(--ink3);display:block}.bb{padding:14px 18px}
@@ -62,6 +63,7 @@ td{padding:10px 14px;border-bottom:1px solid var(--s2);vertical-align:middle}tr:
 .sub{font-size:11px;color:var(--ink3)}
 .pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:10.5px;font-weight:700;white-space:nowrap}
 .pill.high{background:var(--hd);color:var(--high)}.pill.mod{background:var(--md);color:var(--mod)}.pill.low{background:var(--ld);color:#8a6f18}.pill.vlow{background:var(--vd);color:var(--vlow)}.pill.draft{background:var(--s2);color:var(--ink2)}
+.up{color:var(--high);font-weight:600}.dn{color:var(--vlow);font-weight:600}.fl{color:var(--ink2);font-weight:600}
 .form{padding:15px 18px;border-bottom:1px solid var(--border);background:var(--s2);display:none}
 .fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:12px}
 .tb{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center}.tb .in{flex:1;min-width:180px;background:var(--surface)}.tb .sel{width:auto;background:var(--surface)}
@@ -78,9 +80,40 @@ td{padding:10px 14px;border-bottom:1px solid var(--s2);vertical-align:middle}tr:
 .toast{padding:11px 16px;border-radius:9px;font-size:13px;font-weight:500;color:#fff;background:var(--forest);box-shadow:var(--shl)}.toast.ok{background:var(--vlow)}
 .pie{display:flex;gap:22px;align-items:center;flex-wrap:wrap}.pie div.l{font-size:13px;line-height:2}.pie i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:8px}
 .gsplit{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:14px}.gsplit .map{height:460px}
-@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}.grid2,.gsplit{grid-template-columns:minmax(0,1fr)}}
+.live-dot{width:18px;height:18px;border-radius:50%;background:#1a73e8;border:3px solid #fff;box-shadow:0 0 0 0 rgba(26,115,232,.6);animation:pl 1.6s infinite}
+@keyframes pl{70%{box-shadow:0 0 0 16px rgba(26,115,232,0)}100%{box-shadow:0 0 0 0 rgba(26,115,232,0)}}
+.lg{display:flex;gap:14px;flex-wrap:wrap;margin-top:4px;font-size:11px;color:var(--ink3)}
+.av{width:56px;height:56px;border-radius:50%;background:var(--gold);color:#1c1204;display:flex;align-items:center;justify-content:center;font:700 20px 'Spectral',serif;flex-shrink:0}
+.ro{opacity:.65;cursor:not-allowed}
+@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}.grid2,.gsplit,.grid3{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:768px){.mt{display:block}.sb{position:fixed;top:0;left:0;bottom:0;transform:translateX(-100%)}.sb.on{transform:none}.top{padding-left:56px}.view{padding:14px}}
-@media print{.sb,.top,.mt,.btn,.ib{display:none!important}.view{overflow:visible}}
+/* ── Phone mode (Brgy Staff only) ── */
+.bnav{display:none}
+@media(max-width:768px){
+ body.staff .bnav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:1100;background:var(--forest);padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));box-shadow:0 -4px 18px rgba(0,0,0,.25)}
+ .bn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border:none;border-radius:10px;background:none;color:rgba(234,241,234,.75);font:600 11px 'Inter',sans-serif;cursor:pointer}
+ .bn span{font-size:20px}.bn.act{background:var(--gold);color:#1c1204}
+ body.staff .mt,body.staff .sb,body.staff .ov{display:none!important}
+ body.staff .top{padding:12px 14px}
+ body.staff .view{padding:12px 12px 90px}
+ body.staff .in,body.staff .sel{font-size:16px;padding:12px}
+ body.staff .btn{min-height:46px}
+ body.staff .tb .btn{flex:1}
+ body.staff .ib{width:42px;height:42px;font-size:16px}
+ body.staff #view-forms thead{display:none}
+ body.staff #view-forms table,body.staff #view-forms tbody{display:block}
+ body.staff #view-forms tr{display:block;padding:12px 14px;border-bottom:1px solid var(--border)}
+ body.staff #view-forms td{display:flex;justify-content:space-between;gap:10px;border:none;padding:4px 0}
+ body.staff #view-forms td::before{content:attr(data-l);color:var(--ink3);font-size:11px;font-weight:600;text-transform:uppercase}
+ body.staff #view-forms td:first-child::before,body.staff #view-forms td:last-child::before{content:none}
+ body.staff #view-forms td:last-child{justify-content:flex-end;padding-top:8px}
+ body.staff .gsplit .box:nth-child(2){order:-1}
+ body.staff .gsplit .map,body.staff #geo-map{height:50vh!important}
+ body.staff #view-geotag .btn{width:100%;margin-right:0}
+ body.staff #g-list{max-height:220px!important}
+ body.staff .toasts{bottom:calc(90px + env(safe-area-inset-bottom,0px));right:12px;left:12px}
+}
+@media print{.sb,.top,.mt,.btn,.ib,.bnav{display:none!important}.view{overflow:visible}}
 </style></head><body>
 
 <div id="login"><div class="lcard">
@@ -98,7 +131,7 @@ td{padding:10px 14px;border-bottom:1px solid var(--s2);vertical-align:middle}tr:
 <aside class="sb" id="sb">
 <div class="sbh"><div class="seal">🌾</div><div><b>ComBaTy</b><small>MANOLO FORTICH, BUKIDNON</small></div></div>
 <nav class="nav" id="nav"></nav>
-<div class="sbu"><div>🧑‍💼</div><div><div id="un">—</div><small id="ur">—</small></div><button onclick="logout()" title="Log out" aria-label="Log out">⏻</button></div>
+<div class="sbu"><div style="cursor:pointer" onclick="showView('profile')" title="My profile">🧑‍💼</div><div style="cursor:pointer;min-width:0" onclick="showView('profile')" title="My profile"><div id="un">—</div><small id="ur">—</small></div><button onclick="logout()" title="Log out" aria-label="Log out">⏻</button></div>
 </aside>
 <main class="main">
 <div class="top"><div><h2 id="tt">Dashboard</h2><small id="ts">—</small></div><span class="chip" id="chip">—</span></div>
@@ -178,12 +211,12 @@ td{padding:10px 14px;border-bottom:1px solid var(--s2);vertical-align:middle}tr:
 <button class="btn" onclick="saveHH()">💾 Save household</button> <button class="btn o" onclick="tog('hh-f')">Cancel</button></div>
 <div class="tw"><table><thead><tr><th>Household</th><th>Members</th><th>Poverty status</th><th>Form status</th><th>Geotag</th><th>Actions</th></tr></thead><tbody id="f-body"></tbody></table></div></div></div>
 
-<!-- STAFF: GEOTAG -->
+<!-- STAFF: GEOTAG (live location) -->
 <div class="view" id="view-geotag">
-<div class="note">Select a household, then tap its location on the map (or use your device GPS) and save the geotag.</div>
+<div class="note"><b>Live location:</b> tap <b>Start live location</b> to see your position update on the map in real time. Select a household, stand at its location, tap <b>Tag at my location</b>, then <b>Save geotag</b>. You can also tap the map to place a pin manually. Location access requires HTTPS and your permission.</div>
 <div class="gsplit"><div class="box"><div class="bh"><h3>Households</h3></div><div class="bb" id="g-list" style="max-height:400px;overflow:auto"></div>
-<div class="bb" style="border-top:1px solid var(--border)"><div id="g-info" class="sub" style="margin-bottom:10px">No household selected.</div>
-<button class="btn" onclick="useGPS()">📡 Use my GPS</button> <button class="btn" onclick="saveGeo()">📍 Save geotag</button></div></div>
+<div class="bb" style="border-top:1px solid var(--border)"><div id="live-st" class="sub" style="margin-bottom:6px">⚪ Live location is off.</div><div id="g-info" class="sub" style="margin-bottom:10px">No household selected.</div>
+<button class="btn live" id="live-btn" onclick="toggleLive()">📡 Start live location</button><button class="btn" onclick="tagHere()">🎯 Tag at my location</button><button class="btn" onclick="saveGeo()">📍 Save geotag</button></div></div>
 <div class="box"><div id="geo-map" class="map" style="height:460px"></div></div></div></div>
 
 <!-- BARANGAY: DASHBOARD -->
@@ -193,6 +226,7 @@ td{padding:10px 14px;border-bottom:1px solid var(--s2);vertical-align:middle}tr:
 <div class="view" id="view-brgy-reports">
 <div class="tb"><select class="sel" id="br-f" onchange="renderBR()"><option value="">All submissions</option><option>Submitted</option><option>Under Review</option><option>Approved</option><option>Returned</option></select>
 <button class="btn" onclick="genReport()">📄 Generate report</button></div>
+<div class="box"><div class="bh"><div><h3>Trends</h3><small id="brt-sub">Poverty trend and survey submission trend</small></div></div><div class="bb" id="br-trend"></div></div>
 <div class="box"><div class="bh"><div><h3>Submitted Forms</h3><small>Take action on forms submitted by Brgy Staff</small></div></div><div class="tw"><table><thead><tr><th>Household</th><th>Submitted by</th><th>Poverty status</th><th>Status</th><th>Remarks</th><th>Action</th></tr></thead><tbody id="br-body"></tbody></table></div></div>
 <div id="rep-out"></div></div>
 
@@ -200,21 +234,48 @@ td{padding:10px 14px;border-bottom:1px solid var(--s2);vertical-align:middle}tr:
 <div class="view" id="view-map-view"><div style="flex:1;position:relative;min-height:440px"><div id="full-map" style="position:absolute;inset:0;background:#e8e4dc"></div>
 <div class="leg"><b>Household status (visited areas)</b><div><i style="background:#a4322a"></i>Returned</div><div><i style="background:#c76b1f"></i>Under review</div><div><i style="background:#c9a227"></i>Submitted</div><div><i style="background:#2f7d3c"></i>Approved</div><div><i style="background:#93a294"></i>Draft</div></div></div></div>
 
+<!-- MY PROFILE (all roles) -->
+<div class="view" id="view-profile"><div class="grid3">
+<div class="box"><div class="bh"><div><h3>Profile details</h3><small>Update your name and contact details</small></div></div><div class="bb">
+<div style="display:flex;gap:14px;align-items:center;margin-bottom:16px"><div class="av" id="p-av">?</div><div><div id="p-title" class="disp" style="font-size:18px;font-weight:700">—</div><div class="sub" id="p-sub">—</div></div></div>
+<div class="fg">
+<div><label class="lab">Full name</label><input class="in" id="pf-name" maxlength="60"></div>
+<div><label class="lab">Position / designation</label><input class="in" id="pf-pos" maxlength="60"></div>
+<div><label class="lab">Email</label><input class="in" type="email" id="pf-mail" maxlength="80"></div>
+<div><label class="lab">Contact number</label><input class="in" type="tel" id="pf-tel" maxlength="15"></div>
+<div><label class="lab">Address</label><input class="in" id="pf-addr" maxlength="120"></div></div>
+<div class="fg">
+<div><label class="lab">Username</label><input class="in ro" id="pf-user" readonly></div>
+<div><label class="lab">Role</label><input class="in ro" id="pf-role" readonly></div>
+<div><label class="lab">Assigned barangay</label><input class="in ro" id="pf-brgy" readonly></div></div>
+<p class="sub" style="margin-bottom:12px">Username, role and barangay are set by the administrator.</p>
+<button class="btn" onclick="saveProfile()">💾 Save profile</button> <button class="btn o" onclick="renderProfile()">Reset</button></div></div>
+<div class="box"><div class="bh"><div><h3>Change password</h3><small>Use at least 6 characters</small></div></div><div class="bb">
+<div class="grp"><label class="lab">Current password</label><input class="in" type="password" id="pw-cur" autocomplete="current-password"></div>
+<div class="grp"><label class="lab">New password</label><input class="in" type="password" id="pw-new" autocomplete="new-password"></div>
+<div class="grp"><label class="lab">Confirm new password</label><input class="in" type="password" id="pw-cf" autocomplete="new-password" onkeydown="if(event.key==='Enter')savePassword()"></div>
+<button class="btn" onclick="savePassword()">🔒 Update password</button></div></div>
+</div></div>
+
 <!-- BARANGAY: NOTIFICATIONS -->
 <div class="view" id="view-notifications"><div class="box"><div class="bh"><h3>Notifications</h3><button class="btn o" onclick="readAll()">Mark all as read</button></div><div class="bb" id="nt-body"></div></div></div>
 </main></div>
 
 <div class="modal" id="modal" onclick="if(event.target===this)this.classList.remove('on')"><div class="mc" id="mc"></div></div>
 <div class="toasts" id="toasts"></div>
+<nav class="bnav" id="bnav"></nav>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pad=n=>String(n).padStart(2,'0');
 const ts=()=>{const d=new Date();return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`};
-function toast(m,t){const e=document.createElement('div');e.className='toast '+(t||'');e.textContent=m;$('toasts').appendChild(e);setTimeout(()=>e.remove(),3000)}
+function toast(m,t){const e=document.createElement('div');e.className='toast '+(t||'');e.textContent=m;$('toasts').appendChild(e);setTimeout(()=>e.remove(),3200)}
 function tog(id){const e=$(id);e.style.display=e.style.display==='block'?'none':'block';if(id==='rec-f'||id==='bg-f')fillBgySelects()}
+
+// Leaflet's stylesheet can't load from unpkg under the page's CSP, so the few rules it needs are inlined.
+(function(){const s=document.createElement('style');s.textContent='.leaflet-pane,.leaflet-tile,.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-tile-container,.leaflet-pane>svg,.leaflet-pane>canvas,.leaflet-zoom-box,.leaflet-image-layer,.leaflet-layer{position:absolute;left:0;top:0}.leaflet-container{overflow:hidden;position:relative;-webkit-tap-highlight-color:transparent;outline-offset:1px;font:12px/1.5 Inter,sans-serif}.leaflet-tile,.leaflet-marker-icon,.leaflet-marker-shadow{user-select:none;-webkit-user-drag:none}.leaflet-tile{visibility:hidden;filter:inherit}.leaflet-tile-loaded{visibility:inherit}.leaflet-container img.leaflet-tile,.leaflet-container .leaflet-marker-pane img{max-width:none!important;max-height:none!important;width:auto;padding:0}.leaflet-pane{z-index:400}.leaflet-tile-pane{z-index:200}.leaflet-overlay-pane{z-index:400}.leaflet-shadow-pane{z-index:500}.leaflet-marker-pane{z-index:600}.leaflet-tooltip-pane{z-index:650}.leaflet-popup-pane{z-index:700}.leaflet-map-pane canvas{z-index:100}.leaflet-map-pane svg{z-index:200}.leaflet-control{position:relative;z-index:800;pointer-events:visiblePainted;pointer-events:auto;float:left;clear:both}.leaflet-top,.leaflet-bottom{position:absolute;z-index:1000;pointer-events:none}.leaflet-top{top:0}.leaflet-right{right:0}.leaflet-bottom{bottom:0}.leaflet-left{left:0}.leaflet-right .leaflet-control{float:right}.leaflet-top .leaflet-control{margin-top:10px}.leaflet-left .leaflet-control{margin-left:10px}.leaflet-bottom .leaflet-control{margin-bottom:10px}.leaflet-right .leaflet-control{margin-right:10px}.leaflet-zoom-animated{transform-origin:0 0}.leaflet-zoom-anim .leaflet-zoom-animated{transition:transform .25s cubic-bezier(0,0,.25,1)}.leaflet-zoom-anim .leaflet-tile{transition:none}.leaflet-interactive{cursor:pointer}.leaflet-grab{cursor:grab}.leaflet-dragging .leaflet-grab{cursor:move}.leaflet-bar{box-shadow:0 1px 5px rgba(0,0,0,.4);border-radius:4px}.leaflet-bar a{background:#fff;border-bottom:1px solid #ccc;width:26px;height:26px;line-height:26px;display:block;text-align:center;text-decoration:none;color:#000;font:bold 18px "Lucida Console",Monaco,monospace}.leaflet-bar a:first-child{border-radius:4px 4px 0 0}.leaflet-bar a:last-child{border-radius:0 0 4px 4px;border-bottom:none}.leaflet-control-attribution{background:rgba(255,255,255,.8);padding:0 5px;font-size:10px;color:#333}.leaflet-control-attribution a{color:#0078a8;text-decoration:none}.leaflet-popup{position:absolute;text-align:center;margin-bottom:20px}.leaflet-popup-content-wrapper{padding:1px;text-align:left;border-radius:12px;background:#fff;color:#222;box-shadow:0 3px 14px rgba(0,0,0,.4)}.leaflet-popup-content{margin:13px 24px 13px 20px;line-height:1.3;font-size:13px}.leaflet-popup-tip-container{width:40px;height:20px;position:absolute;left:50%;margin-left:-20px;overflow:hidden;pointer-events:none}.leaflet-popup-tip{width:17px;height:17px;padding:1px;margin:-10px auto 0;transform:rotate(45deg);background:#fff}.leaflet-popup-close-button{position:absolute;top:0;right:0;padding:4px 8px;color:#757575;text-decoration:none;font:16px/24px Tahoma,Verdana,sans-serif}.leaflet-tooltip{position:absolute;padding:6px;background:#fff;border:1px solid #fff;border-radius:3px;color:#222;white-space:nowrap;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,.4)}.leaflet-div-icon{background:transparent;border:none}';document.head.appendChild(s)})();
 
 // ── DATA (placeholders: replace with real survey data) ──
 const classify=p=>p>=36?'High':p>=21?'Moderate':p>=11?'Low':'Very Low';
@@ -240,6 +301,9 @@ let LOGS=[{t:'2026-10-26 08:02',user:'admin',role:'Administrator',type:'User',ac
 let NOTIFS=[{brgy:'Guilang-Guilang',text:'Brgy Staff (brgystaff) submitted 2 household forms for review.',time:'2026-10-25 14:31',read:false}];
 let cur=null;
 const isAdmin=()=>cur&&cur.role==='Administrator';
+// Phone access is reserved for Brgy Staff; Administrator and Barangay accounts are computer-only.
+const isPhone=()=>/Android.+Mobile|iPhone|iPod|Windows Phone/i.test(navigator.userAgent)||(matchMedia('(max-width:768px)').matches&&matchMedia('(pointer:coarse)').matches);
+const PHONE_MSG='Phone access is only available to Brgy Staff accounts. Please log in on a computer.';
 function logEvent(type,action){LOGS.unshift({t:ts(),user:cur?cur.username:'—',role:cur?cur.role:'—',type,action})}
 const myHH=()=>isAdmin()?HOUSEHOLDS:HOUSEHOLDS.filter(h=>h.barangay===cur.barangay);
 function hhPov(h){const pc=h.income/Math.max(1,h.members);return pc<2775?'Poor':pc<4163?'Near-poor':'Non-poor'} // illustrative per-capita monthly thresholds
@@ -248,9 +312,9 @@ const spill=s=>`<span class="pill ${SK[s]}">${s}</span>`;
 
 // ── ROLES & NAV ──
 const NAV={dashboard:['🏠','Dashboard','Municipal poverty overview'],'system-logs':['🧾','System Logs','Activity and user logs'],'ai-analysis':['🤖','AI Analysis','Forecasting and prediction'],'ai-reports':['📄','Reports','Tables of AI analysis'],'poverty-data':['📊','Poverty Data','Historical records and barangay indicators'],users:['👥','Users','Manage system accounts'],
-forms:['📝','Forms','Household information records'],geotag:['📍','Geotagging','Tag household locations'],
-'brgy-dashboard':['🏠','Dashboard','Barangay progress overview'],'brgy-reports':['📄','Reports','Review and act on staff submissions'],'map-view':['🗺️','GIS Map','Areas visited by staff'],notifications:['🔔','Notifications','Alerts on submitted forms']};
-const ROLE_VIEWS={Administrator:['dashboard','system-logs','ai-analysis','ai-reports','poverty-data','users'],'Brgy Staff':['forms','geotag'],Barangay:['brgy-dashboard','brgy-reports','map-view','notifications']};
+forms:['📝','Forms','Household information records'],geotag:['📍','Geotagging','Tag household locations with live GPS'],
+'brgy-dashboard':['🏠','Dashboard','Barangay progress and trend analysis'],'brgy-reports':['📄','Reports','Trends, review and action on staff submissions'],'map-view':['🗺️','GIS Map','Areas visited by staff'],notifications:['🔔','Notifications','Alerts on submitted forms'],profile:['👤','My Profile','Edit your name, details and password']};
+const ROLE_VIEWS={Administrator:['dashboard','system-logs','ai-analysis','ai-reports','poverty-data','users','profile'],'Brgy Staff':['forms','geotag','profile'],Barangay:['brgy-dashboard','brgy-reports','map-view','notifications','profile']};
 const canView=n=>!!cur&&ROLE_VIEWS[cur.role].includes(n);
 
 function login(){
@@ -260,23 +324,28 @@ function login(){
  const a=ACCOUNTS.find(x=>x.username.toLowerCase()===u.toLowerCase()&&x.password===p);
  if(!a)return fail('Invalid username or password.');
  if(a.status!=='Active')return fail('This account has been suspended. Contact the administrator.');
+ if(isPhone()&&a.role!=='Brgy Staff')return fail(PHONE_MSG);
  e.classList.remove('show');cur=a;logEvent('User','Logged in');
- $('un').textContent=a.username;$('ur').textContent=a.role;
+ document.body.classList.toggle('staff',a.role==='Brgy Staff');
+ updateUserUI();
  $('chip').textContent=isAdmin()?`${BARANGAYS.length} Barangays Tracked`:'Brgy. '+a.barangay;
  $('login').style.display='none';$('app').classList.add('on');
  buildNav();showView(ROLE_VIEWS[a.role][0]);
 }
-function logout(){logEvent('User','Logged out');cur=null;$('app').classList.remove('on');$('login').style.display='flex';$('lu').value='';$('lp').value=''}
+function logout(){stopLive(true);logEvent('User','Logged out');cur=null;document.body.classList.remove('staff');$('bnav').innerHTML='';$('app').classList.remove('on');$('login').style.display='flex';$('lu').value='';$('lp').value=''}
 function buildNav(){
  $('nav').innerHTML=ROLE_VIEWS[cur.role].map(v=>`<button class="nl" data-v="${v}" onclick="showView('${v}')"><span>${NAV[v][0]}</span>${NAV[v][1]}${v==='notifications'?'<span class="nb" id="nbadge" style="display:none"></span>':''}</button>`).join('');
+ $('bnav').innerHTML=cur.role==='Brgy Staff'?ROLE_VIEWS[cur.role].map(v=>`<button class="bn" data-v="${v}" onclick="showView('${v}')"><span>${NAV[v][0]}</span>${NAV[v][1].replace('Geotagging','Geotag').replace('My Profile','Profile')}</button>`).join(''):'';
  badge();
 }
 function showView(n){
+ if(cur&&cur.role!=='Brgy Staff'&&isPhone()){toast(PHONE_MSG);logout();$('lerr').textContent=PHONE_MSG;$('lerr').classList.add('show');return}
  if(!canView(n)){toast('You do not have access to that page.');return}
+ if(n!=='geotag')stopLive(true); // stop GPS tracking when leaving the geotag page (saves battery)
  document.querySelectorAll('.view').forEach(v=>v.classList.remove('act'));$('view-'+n).classList.add('act');
- document.querySelectorAll('.nl').forEach(b=>b.classList.toggle('act',b.dataset.v===n));
+ document.querySelectorAll('.nl,.bn').forEach(b=>b.classList.toggle('act',b.dataset.v===n));
  $('tt').textContent=NAV[n][1];$('ts').textContent=NAV[n][2];
- ({dashboard:renderAdminDash,'system-logs':renderLogs,'ai-analysis':renderAI,'ai-reports':renderAIReports,'poverty-data':renderPD,users:renderUsers,forms:renderForms,geotag:renderGeoList,'brgy-dashboard':renderBD,'brgy-reports':renderBR,notifications:renderNotifs}[n]||(()=>{}))();
+ ({dashboard:renderAdminDash,'system-logs':renderLogs,'ai-analysis':renderAI,'ai-reports':renderAIReports,'poverty-data':renderPD,users:renderUsers,forms:renderForms,geotag:renderGeoList,'brgy-dashboard':renderBD,'brgy-reports':renderBR,notifications:renderNotifs,profile:renderProfile}[n]||(()=>{}))();
  if(innerWidth<=768&&$('sb').classList.contains('on'))toggleSb();
  setTimeout(refreshMaps,60);
 }
@@ -297,7 +366,7 @@ function renderLogs(){
  $('lg-body').innerHTML=LOGS.filter(l=>(!t||l.type===t)&&(l.user+' '+l.action).toLowerCase().includes(q)).map(l=>`<tr><td>${l.t}</td><td><span class="pill ${l.type==='User'?'low':'vlow'}">${l.type}</span></td><td>${esc(l.user)}</td><td>${esc(l.role)}</td><td>${esc(l.action)}</td></tr>`).join('')||'<tr><td colspan="5" class="sub" style="text-align:center;padding:22px">No log entries.</td></tr>';
 }
 
-// ── ADMIN: AI ANALYSIS (linear regression) ──
+// ── LINEAR REGRESSION + SHARED TREND CHARTS ──
 function regress(name){
  const pts=RECORDS.filter(r=>r.barangay===name&&r.hh>0).map(r=>({x:r.year,y:r.mag/r.hh*100})).sort((a,b)=>a.x-b.x);
  const n=pts.length;if(n<2)return null;
@@ -307,16 +376,19 @@ function regress(name){
  const lx=pts[n-1].x,cl=v=>Math.max(0,Math.min(100,v));
  return{pts,n,slope,r2:sst?1-sse/sst:null,fut:[1,2,3].map(i=>({x:lx+2*i,y:cl(ic+slope*(lx+2*i))}))};
 }
+function trendSVG(r){
+ const {pts,fut,n}=r,all=pts.concat(fut),W=560,H=240,L=40,R=16,T=14,B=30,x0=all[0].x,x1=all[all.length-1].x;
+ const sx=x=>L+(x-x0)/(x1-x0)*(W-L-R),sy=y=>T+(1-y/100)*(H-T-B),P=a=>a.map((p,i)=>`${i?'L':'M'}${sx(p.x).toFixed(1)},${sy(p.y).toFixed(1)}`).join(' ');
+ const grid=[0,25,50,75,100].map(v=>`<line class="gl" x1="${L}" x2="${W-R}" y1="${sy(v)}" y2="${sy(v)}"/><text class="tx" x="${L-6}" y="${sy(v)+4}" font-size="10" text-anchor="end">${v}%</text>`).join('');
+ const dots=(a,c,h)=>a.map(p=>`<circle cx="${sx(p.x)}" cy="${sy(p.y)}" r="4.5" fill="${h?'var(--surface)':c}" stroke="${c}" stroke-width="2"/><text x="${sx(p.x)}" y="${sy(p.y)-9}" font-size="10" font-weight="600" text-anchor="middle" fill="${c}">${p.y.toFixed(1)}%</text><text class="tx2" x="${sx(p.x)}" y="${H-10}" font-size="10" text-anchor="middle">${p.x}</text>`).join('');
+ return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">${grid}<rect x="${sx(pts[n-1].x)}" y="${T}" width="${W-R-sx(pts[n-1].x)}" height="${H-T-B}" fill="rgba(185,134,47,.1)"/><path d="${P(pts)}" fill="none" stroke="#1f6b34" stroke-width="2.5"/><path d="${P([pts[n-1]].concat(fut))}" fill="none" stroke="#b9862f" stroke-width="2.5" stroke-dasharray="6 5"/>${dots(pts,'#1f6b34')}${dots(fut,'#b9862f',1)}</svg><div class="lg"><span><b style="color:#1f6b34">━</b> Recorded</span><span><b style="color:#b9862f">╌</b> Forecast (shaded)</span></div>`;
+}
 function renderAI(){
  const s=$('fc-b'),prev=s.value;s.innerHTML=BARANGAYS.map(b=>`<option>${esc(b.name)}</option>`).join('');if(BARANGAYS.some(b=>b.name===prev))s.value=prev;
  const r=regress(s.value),ch=$('fc-chart');
  if(!r){ch.innerHTML='<div class="sub" style="padding:22px;text-align:center">Add at least 2 survey years for this barangay to generate a forecast.</div>';$('fc-note').textContent='';return}
- const {pts,fut,n,slope}=r,all=pts.concat(fut),W=560,H=240,L=40,R=16,T=14,B=30,x0=all[0].x,x1=all[all.length-1].x;
- const sx=x=>L+(x-x0)/(x1-x0)*(W-L-R),sy=y=>T+(1-y/100)*(H-T-B),P=a=>a.map((p,i)=>`${i?'L':'M'}${sx(p.x).toFixed(1)},${sy(p.y).toFixed(1)}`).join(' ');
- const grid=[0,25,50,75,100].map(v=>`<line class="gl" x1="${L}" x2="${W-R}" y1="${sy(v)}" y2="${sy(v)}"/><text class="tx" x="${L-6}" y="${sy(v)+4}" font-size="10" text-anchor="end">${v}%</text>`).join('');
- const dots=(a,c,h)=>a.map(p=>`<circle cx="${sx(p.x)}" cy="${sy(p.y)}" r="4.5" fill="${h?'var(--surface)':c}" stroke="${c}" stroke-width="2"/><text x="${sx(p.x)}" y="${sy(p.y)-9}" font-size="10" font-weight="600" text-anchor="middle" fill="${c}">${p.y.toFixed(1)}%</text><text class="tx2" x="${sx(p.x)}" y="${H-10}" font-size="10" text-anchor="middle">${p.x}</text>`).join('');
- ch.innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">${grid}<rect x="${sx(pts[n-1].x)}" y="${T}" width="${W-R-sx(pts[n-1].x)}" height="${H-T-B}" fill="rgba(185,134,47,.1)"/><path d="${P(pts)}" fill="none" stroke="#1f6b34" stroke-width="2.5"/><path d="${P([pts[n-1]].concat(fut))}" fill="none" stroke="#b9862f" stroke-width="2.5" stroke-dasharray="6 5"/>${dots(pts,'#1f6b34')}${dots(fut,'#b9862f',1)}</svg><div class="sub" style="display:flex;gap:14px;margin-top:4px"><span><b style="color:#1f6b34">━</b> Recorded</span><span><b style="color:#b9862f">╌</b> Forecast (shaded)</span></div>`;
- $('fc-note').textContent=`Trend: ${slope>=0?'+':''}${slope.toFixed(2)} percentage points per year across ${n} survey years (R² = ${r.r2===null?'n/a':r.r2.toFixed(2)}). Next survey (${fut[0].x}) is predicted at ${fut[0].y.toFixed(1)}% — ${classify(fut[0].y)} poverty.`;
+ ch.innerHTML=trendSVG(r);
+ $('fc-note').textContent=`Trend: ${r.slope>=0?'+':''}${r.slope.toFixed(2)} percentage points per year across ${r.n} survey years (R² = ${r.r2===null?'n/a':r.r2.toFixed(2)}). Next survey (${r.fut[0].x}) is predicted at ${r.fut[0].y.toFixed(1)}% — ${classify(r.fut[0].y)} poverty.`;
 }
 function renderAIReports(){
  let a='',c='',hdr='';
@@ -327,6 +399,38 @@ function renderAIReports(){
   c+=`<tr><td><b>${esc(b.name)}</b></td>${r.fut.map(f=>`<td>${f.y.toFixed(1)}%</td>`).join('')}</tr>`});
  $('ar1').innerHTML=a;$('ar2').innerHTML=c;$('ar2h').innerHTML=hdr;
  $('ar3').innerHTML=[...RECORDS].sort((p,q)=>p.barangay.localeCompare(q.barangay)||p.year-q.year).map(r=>`<tr><td>${esc(r.barangay)}</td><td>${r.year}</td><td>${r.hh}</td><td>${r.mag}</td><td>${(r.mag/r.hh*100).toFixed(2)}%</td></tr>`).join('');
+}
+
+// ── BARANGAY TREND HELPERS ──
+const NOREC='<div class="sub" style="padding:22px;text-align:center">Needs at least 2 survey years of records for this barangay (add them under Poverty Data).</div>';
+function dirTxt(r){return Math.abs(r.slope)<0.1?['→ Stable','fl']:r.slope>0?['↑ Worsening','up']:['↓ Improving','dn']}
+function trendSummary(name){
+ const r=regress(name);if(!r)return '';const d=dirTxt(r);
+ return `Poverty incidence in Brgy. ${esc(name)} is <b class="${d[1]}">${d[0].slice(2).toLowerCase()}</b> at ${r.slope>=0?'+':''}${r.slope.toFixed(2)} pp per year over ${r.n} surveys (R² ${r.r2===null?'n/a':r.r2.toFixed(2)}). The next survey (${r.fut[0].x}) is projected at <b>${r.fut[0].y.toFixed(1)}%</b> — ${classify(r.fut[0].y)}.`;
+}
+function povTrendTable(name){
+ const rs=RECORDS.filter(r=>r.barangay===name&&r.hh>0).sort((a,b)=>a.year-b.year),r=regress(name);
+ if(!rs.length)return '';
+ const rows=rs.map((x,i)=>{const p=x.mag/x.hh*100,pr=i?rs[i-1].mag/rs[i-1].hh*100:null,d=pr===null?null:p-pr;
+  return `<tr><td>${x.year}</td><td>${x.hh}</td><td>${x.mag}</td><td>${p.toFixed(2)}%</td><td>${d===null?'—':`<span class="${Math.abs(d)<.1?'fl':d>0?'up':'dn'}">${d>0?'↑ +':d<0?'↓ ':'→ '}${d.toFixed(2)} pp</span>`}</td><td>Recorded</td></tr>`}).join('');
+ const fr=r?r.fut.map(f=>`<tr><td>${f.x}</td><td>—</td><td>—</td><td>${f.y.toFixed(2)}%</td><td>—</td><td><span class="pill ${LK[classify(f.y)]}">Forecast · ${classify(f.y)}</span></td></tr>`).join(''):'';
+ return `<div class="tw"><table><thead><tr><th>Year</th><th>No. of HH</th><th>Poor HH</th><th>Poor HH %</th><th>Change vs prior</th><th>Type</th></tr></thead><tbody>${rows}${fr}</tbody></table></div>`;
+}
+function subDays(){ // submission activity grouped by date
+ const days={};myHH().filter(h=>h.status!=='Draft').forEach(h=>{const d=days[h.date]=days[h.date]||{Submitted:0,'Under Review':0,Approved:0,Returned:0};d[h.status]++});
+ return Object.keys(days).sort().map(k=>({d:k,...days[k],t:days[k].Submitted+days[k]['Under Review']+days[k].Approved+days[k].Returned}));
+}
+function subSVG(ds){
+ if(!ds.length)return '<div class="sub" style="padding:22px;text-align:center">No submissions yet.</div>';
+ const W=560,H=240,L=34,R=14,T=14,B=34,mx=Math.max(...ds.map(d=>d.t),1),bw=Math.min(54,(W-L-R)/ds.length*.6),st=(W-L-R)/ds.length,sy=v=>T+(1-v/mx)*(H-T-B);
+ const ticks=[...new Set([0,Math.ceil(mx/2),mx])].map(v=>`<line class="gl" x1="${L}" x2="${W-R}" y1="${sy(v)}" y2="${sy(v)}"/><text class="tx" x="${L-6}" y="${sy(v)+4}" font-size="10" text-anchor="end">${v}</text>`).join('');
+ const bars=ds.map((d,i)=>{let y0=H-B;const x=L+i*st+(st-bw)/2;let s='';
+  ['Approved','Under Review','Submitted','Returned'].forEach(k=>{if(!d[k])return;const h=d[k]/mx*(H-T-B);y0-=h;s+=`<rect x="${x}" y="${y0}" width="${bw}" height="${h}" fill="${SC[k]}"/>`});
+  return s+`<text x="${x+bw/2}" y="${y0-5}" font-size="10" font-weight="600" text-anchor="middle" class="tx2">${d.t}</text><text class="tx2" x="${x+bw/2}" y="${H-14}" font-size="10" text-anchor="middle">${d.d.slice(5)}</text>`}).join('');
+ return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">${ticks}${bars}</svg><div class="lg">${['Approved','Under Review','Submitted','Returned'].map(k=>`<span><b style="color:${SC[k]}">■</b> ${k}</span>`).join('')}</div>`;
+}
+function subTable(ds){
+ return `<div class="tw"><table><thead><tr><th>Date</th><th>Total submitted</th><th>Approved</th><th>Under review</th><th>Pending</th><th>Returned</th></tr></thead><tbody>${ds.map(d=>`<tr><td>${d.d}</td><td><b>${d.t}</b></td><td>${d.Approved}</td><td>${d['Under Review']}</td><td>${d.Submitted}</td><td>${d.Returned}</td></tr>`).join('')||'<tr><td colspan="6" class="sub" style="text-align:center;padding:18px">No submissions yet.</td></tr>'}</tbody></table></div>`;
 }
 
 // ── ADMIN: POVERTY DATA ──
@@ -351,10 +455,38 @@ function saveBgy(){
 }
 function delBgy(n){if(!confirm('Remove '+n+' from the system?'))return;const i=BARANGAYS.findIndex(b=>b.name===n);BARANGAYS.splice(i,1);RECORDS=RECORDS.filter(r=>r.barangay!==n);logEvent('Activity','Removed barangay '+n);renderPD();toast('Barangay removed.','ok')}
 
+// ── MY PROFILE ──
+const initials=n=>(n||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'?';
+function updateUserUI(){$('un').textContent=cur.fullName||cur.username;$('ur').textContent=cur.role}
+function renderProfile(){
+ const a=cur;
+ $('pf-name').value=a.fullName||'';$('pf-pos').value=a.position||'';$('pf-mail').value=a.email||'';$('pf-tel').value=a.phone||'';$('pf-addr').value=a.address||'';
+ $('pf-user').value=a.username;$('pf-role').value=a.role;$('pf-brgy').value=a.barangay;
+ ['pw-cur','pw-new','pw-cf'].forEach(i=>$(i).value='');
+ $('p-av').textContent=initials(a.fullName||a.username);$('p-title').textContent=a.fullName||a.username;$('p-sub').textContent=a.role+' · '+a.barangay+(a.position?' · '+a.position:'');
+}
+function saveProfile(){
+ const n=$('pf-name').value.trim(),m=$('pf-mail').value.trim(),t=$('pf-tel').value.trim();
+ if(n.length<2){toast('Please enter your full name.');return}
+ if(m&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(m)){toast('Enter a valid email address.');return}
+ if(t&&!/^[0-9+()\-\s]{7,15}$/.test(t)){toast('Enter a valid contact number.');return}
+ Object.assign(cur,{fullName:n,position:$('pf-pos').value.trim(),email:m,phone:t,address:$('pf-addr').value.trim()});
+ logEvent('User','Updated profile details');updateUserUI();renderProfile();toast('Profile updated.','ok');
+}
+function savePassword(){
+ const c=$('pw-cur').value,n=$('pw-new').value,f=$('pw-cf').value;
+ if(!c||!n||!f){toast('Fill in all password fields.');return}
+ if(c!==cur.password){toast('Current password is incorrect.');return}
+ if(n.length<6){toast('New password must be at least 6 characters.');return}
+ if(n===c){toast('New password must be different from the current one.');return}
+ if(n!==f){toast('New passwords do not match.');return}
+ cur.password=n;logEvent('User','Changed account password');['pw-cur','pw-new','pw-cf'].forEach(i=>$(i).value='');toast('Password updated.','ok');
+}
+
 // ── ADMIN: USERS ──
 function toggleAcc(){fillBgySelects();const e=$('acc-f');e.style.display=e.style.display==='block'?'none':'block'}
 function renderUsers(){
- $('us-body').innerHTML=ACCOUNTS.map(a=>`<tr><td><b>${esc(a.username)}</b>${a===cur?' <span class="sub">· YOU</span>':''}</td><td>${a.role}</td><td>${esc(a.barangay)}</td><td><span class="pill ${a.status==='Active'?'vlow':'high'}">${a.status}</span></td><td>${a===cur?'—':`<button class="ib" onclick="toggleAcct('${esc(a.username)}')" aria-label="Suspend or activate">${a.status==='Active'?'⏸':'▶'}</button><button class="ib d" onclick="delAcct('${esc(a.username)}')" aria-label="Delete account">🗑</button>`}</td></tr>`).join('');
+ $('us-body').innerHTML=ACCOUNTS.map(a=>`<tr><td><b>${esc(a.username)}</b>${a===cur?' <span class="sub">· YOU</span>':''}${a.fullName?`<div class="sub">${esc(a.fullName)}</div>`:''}</td><td>${a.role}</td><td>${esc(a.barangay)}</td><td><span class="pill ${a.status==='Active'?'vlow':'high'}">${a.status}</span></td><td>${a===cur?'—':`<button class="ib" onclick="toggleAcct('${esc(a.username)}')" aria-label="Suspend or activate">${a.status==='Active'?'⏸':'▶'}</button><button class="ib d" onclick="delAcct('${esc(a.username)}')" aria-label="Delete account">🗑</button>`}</td></tr>`).join('');
 }
 function createAcc(){
  const username=$('au').value.trim(),password=$('ap').value.trim();
@@ -369,7 +501,7 @@ function delAcct(u){if(!confirm('Delete account '+u+'?'))return;ACCOUNTS=ACCOUNT
 const editable=h=>h.status==='Draft'||h.status==='Returned';
 function renderForms(){
  const q=$('f-q').value.toLowerCase();
- $('f-body').innerHTML=myHH().filter(h=>(h.head+h.id).toLowerCase().includes(q)).map(h=>`<tr><td><b>${esc(h.head)}</b><div class="sub">${h.id} · ${esc(h.address)}</div></td><td>${h.members}</td><td>${hhPov(h)}</td><td>${spill(h.status)}</td><td>${h.lat?'📍 Tagged':'<span class="sub">—</span>'}</td>
+ $('f-body').innerHTML=myHH().filter(h=>(h.head+h.id).toLowerCase().includes(q)).map(h=>`<tr><td><b>${esc(h.head)}</b><div class="sub">${h.id} · ${esc(h.address)}</div></td><td data-l="Members">${h.members}</td><td data-l="Poverty">${hhPov(h)}</td><td data-l="Form">${spill(h.status)}</td><td data-l="Geotag">${h.lat?'📍 Tagged':'<span class="sub">—</span>'}</td>
  <td><button class="ib" onclick="viewHH('${h.id}')" title="View" aria-label="View">👁</button><button class="ib" onclick="openHH('${h.id}')" title="Modify" aria-label="Modify" ${editable(h)?'':'disabled'}>✏️</button><button class="ib d" onclick="delHH('${h.id}')" title="Remove" aria-label="Remove" ${editable(h)?'':'disabled'}>🗑</button></td></tr>`).join('')||'<tr><td colspan="6" class="sub" style="text-align:center;padding:22px">No household records yet.</td></tr>';
 }
 function openHH(id){
@@ -389,7 +521,7 @@ function saveHH(){
 function delHH(id){if(!confirm('Remove household '+id+'?'))return;HOUSEHOLDS=HOUSEHOLDS.filter(h=>h.id!==id);logEvent('Activity','Removed household '+id);renderForms();toast('Household removed.','ok')}
 function viewHH(id){
  const h=HOUSEHOLDS.find(x=>x.id===id),r=(k,v)=>`<dt>${k}</dt><dd>${esc(v)}</dd>`;
- $('mc').innerHTML=`<h3>${esc(h.head)}</h3><div class="sub">${h.id} · Brgy. ${esc(h.barangay)}</div><dl>${r('Address',h.address)}${r('Members',h.members)}${r('Monthly income','₱'+Number(h.income).toLocaleString())}${r('Occupation',h.occupation)}${r('Education',h.education)}${r('Housing',h.housing)}${r('Services',h.services)}${r('Poverty status',hhPov(h))}${r('Form status',h.status)}${r('Geotag',h.lat?h.lat.toFixed(5)+', '+h.lng.toFixed(5):'Not tagged')}${h.remarks?r('Remarks',h.remarks):''}</dl><button class="btn" onclick="$('modal').classList.remove('on')">Close</button>`;
+ $('mc').innerHTML=`<h3>${esc(h.head)}</h3><div class="sub">${h.id} · Brgy. ${esc(h.barangay)}</div><dl>${r('Address',h.address)}${r('Members',h.members)}${r('Monthly income','₱'+Number(h.income).toLocaleString())}${r('Occupation',h.occupation)}${r('Education',h.education)}${r('Housing',h.housing)}${r('Services',h.services)}${r('Poverty status',hhPov(h))}${r('Form status',h.status)}${r('Geotag',h.lat?h.lat.toFixed(5)+', '+h.lng.toFixed(5):'Not tagged')}${h.geoSrc?r('Geotag method',h.geoSrc):''}${h.geoAt?r('Tagged at',h.geoAt):''}${h.remarks?r('Remarks',h.remarks):''}</dl><button class="btn" onclick="$('modal').classList.remove('on')">Close</button>`;
  $('modal').classList.add('on');
 }
 function submitDrafts(){
@@ -411,15 +543,21 @@ function pie(items){
 function renderBD(){
  const hs=myHH(),tgt=(BARANGAYS.find(b=>b.name===cur.barangay)||{}).hh||0,rec=hs.filter(h=>h.status!=='Draft').length,ok=hs.filter(h=>h.status==='Approved').length,pend=hs.filter(h=>h.status==='Submitted'||h.status==='Under Review').length;
  const pct=tgt?Math.min(100,rec/tgt*100):0,pv=['Poor','Near-poor','Non-poor'].map((l,i)=>({l,c:['#a4322a','#c9a227','#2f7d3c'][i],n:hs.filter(h=>hhPov(h)===l).length}));
+ const r=regress(cur.barangay);
  $('bd').innerHTML=`<div class="stats"><div class="sc gold"><small>Survey progress</small><b>${pct.toFixed(1)}%</b><span>${rec} of ${tgt} households recorded</span></div>
  <div class="sc vlow"><small>Households in area</small><b>${tgt}</b><span>${hs.length} on file in system</span></div>
  <div class="sc mod"><small>Awaiting action</small><b>${pend}</b><span>Submitted or under review</span></div>
  <div class="sc low"><small>Approved forms</small><b>${ok}</b><span>Action completed</span></div></div>
  <div class="grid2"><div class="box"><div class="bh"><div><h3>Poverty Cases</h3><small>Households by poverty status</small></div></div><div class="bb">${pie(pv)}</div></div>
- <div class="box"><div class="bh"><div><h3>Progress Report</h3><small>Brgy. ${esc(cur.barangay)}</small></div></div><div class="bb"><div class="bar"><i style="width:${pct}%"></i></div><p class="sub">${pct.toFixed(1)}% of the target household survey has been submitted by Brgy Staff.</p></div></div></div>`;
+ <div class="box"><div class="bh"><div><h3>Progress Report</h3><small>Brgy. ${esc(cur.barangay)}</small></div></div><div class="bb"><div class="bar"><i style="width:${pct}%"></i></div><p class="sub">${pct.toFixed(1)}% of the target household survey has been submitted by Brgy Staff.</p></div></div></div>
+ <div class="grid3"><div class="box"><div class="bh"><div><h3>📈 Poverty Trend Analysis</h3><small>Poor household proportion per survey year, with forecast</small></div></div><div class="bb">${r?trendSVG(r)+`<p class="sub" style="margin-top:8px;line-height:1.5">${trendSummary(cur.barangay)}</p>`:NOREC}</div></div>
+ <div class="box"><div class="bh"><div><h3>📊 Survey Submission Trend</h3><small>Forms submitted per day, by review status</small></div></div><div class="bb">${subSVG(subDays())}</div></div></div>`;
 }
 function renderBR(){
- const f=$('br-f').value;
+ const f=$('br-f').value,r=regress(cur.barangay),ds=subDays();
+ $('brt-sub').textContent='Brgy. '+cur.barangay+' · poverty trend and survey submission trend';
+ $('br-trend').innerHTML=`<div class="grid3"><div><h3 style="font-size:13.5px;margin-bottom:6px">Poverty incidence trend</h3>${r?trendSVG(r):NOREC}</div><div><h3 style="font-size:13.5px;margin-bottom:6px">Submission trend</h3>${subSVG(ds)}</div></div>
+ ${r?`<p class="sub" style="margin:10px 0;line-height:1.5">${trendSummary(cur.barangay)}</p>`:''}${povTrendTable(cur.barangay)}<div style="height:12px"></div>${subTable(ds)}`;
  $('br-body').innerHTML=myHH().filter(h=>h.status!=='Draft'&&(!f||h.status===f)).map(h=>`<tr><td><b>${esc(h.head)}</b><div class="sub">${h.id} · ${esc(h.address)}</div></td><td>${esc(h.by)}<div class="sub">${h.date}</div></td><td>${hhPov(h)}</td><td>${spill(h.status)}</td><td class="sub">${esc(h.remarks)||'—'}</td>
  <td><button class="ib" onclick="viewHH('${h.id}')" aria-label="View">👁</button><button class="ib" onclick="decide('${h.id}','Approved')" title="Approve" aria-label="Approve">✔</button><button class="ib" onclick="decide('${h.id}','Under Review')" title="Review" aria-label="Mark for review">🔍</button><button class="ib d" onclick="decide('${h.id}','Returned')" title="Return" aria-label="Return to staff">↩</button></td></tr>`).join('')||'<tr><td colspan="6" class="sub" style="text-align:center;padding:22px">No submitted forms.</td></tr>';
 }
@@ -429,10 +567,11 @@ function decide(id,st){
  h.status=st;h.actedBy=cur.username;h.actedOn=ts();logEvent('Activity',`${st} household form ${id}`);renderBR();toast('Form marked '+st+'.','ok');
 }
 function genReport(){
- const hs=myHH().filter(h=>h.status!=='Draft'),n=s=>hs.filter(h=>h.status===s).length;
+ const hs=myHH().filter(h=>h.status!=='Draft'),n=s=>hs.filter(h=>h.status===s).length,r=regress(cur.barangay);
  $('rep-out').innerHTML=`<div class="box"><div class="bh"><div><h3>Action Taken Report — Brgy. ${esc(cur.barangay)}</h3><small>Generated ${ts()} by ${esc(cur.username)}</small></div><button class="btn" onclick="window.print()">🖨 Print</button></div>
  <div class="bb"><p style="font-size:13px;margin-bottom:12px">Total submissions: <b>${hs.length}</b> · Approved: <b>${n('Approved')}</b> · Under review: <b>${n('Under Review')}</b> · Returned: <b>${n('Returned')}</b> · Pending: <b>${n('Submitted')}</b></p>
- <div class="tw"><table><thead><tr><th>Household</th><th>Submitted by</th><th>Action taken</th><th>Remarks</th></tr></thead><tbody>${hs.map(h=>`<tr><td>${esc(h.head)} <span class="sub">${h.id}</span></td><td>${esc(h.by)}</td><td>${h.status}</td><td class="sub">${esc(h.remarks)||'—'}</td></tr>`).join('')}</tbody></table></div></div></div>`;
+ <div class="tw"><table><thead><tr><th>Household</th><th>Submitted by</th><th>Action taken</th><th>Remarks</th></tr></thead><tbody>${hs.map(h=>`<tr><td>${esc(h.head)} <span class="sub">${h.id}</span></td><td>${esc(h.by)}</td><td>${h.status}</td><td class="sub">${esc(h.remarks)||'—'}</td></tr>`).join('')}</tbody></table></div>
+ <h3 style="font-size:14px;margin:18px 0 8px">Trend summary</h3>${r?`<p style="font-size:13px;line-height:1.6;margin-bottom:10px">${trendSummary(cur.barangay)}</p>`:''}${povTrendTable(cur.barangay)||NOREC}<div style="height:12px"></div>${subTable(subDays())}</div></div>`;
  logEvent('Activity','Generated action taken report');
 }
 const myNotifs=()=>NOTIFS.filter(n=>cur&&n.brgy===cur.barangay);
@@ -463,30 +602,63 @@ function renderCoverage(){
  if(pts.length)m.map.fitBounds(pts,{padding:[60,60],maxZoom:16});else if(b)m.map.setView([b.lat,b.lng],14);
 }
 
-// ── STAFF: GEOTAGGING ──
-const GEO={sel:null,pending:null,fit:false};
+// ── STAFF: GEOTAGGING WITH LIVE LOCATION ──
+const GEO={sel:null,pending:null,src:'',fit:false};
+const LIVE={id:null,pos:null,acc:null,t:'',follow:true};
 function renderGeoList(){
- $('g-list').innerHTML=myHH().map(h=>`<div class="nt" style="align-items:center"><div style="flex:1"><b>${esc(h.head)}</b><div class="sub">${h.id} · ${h.lat?'📍 tagged':'not tagged'}</div></div><button class="ib ${GEO.sel===h.id?'':'o'}" style="${GEO.sel===h.id?'background:var(--forest);color:#fff':''}" onclick="selGeo('${h.id}')">${h.lat?'Retag':'Tag'}</button></div>`).join('')||'<div class="sub">No households yet. Add some in Forms.</div>';
+ $('g-list').innerHTML=myHH().map(h=>`<div class="nt" style="align-items:center"><div style="flex:1"><b>${esc(h.head)}</b><div class="sub">${h.id} · ${h.lat?'📍 tagged'+(h.geoSrc?' ('+esc(h.geoSrc)+')':''):'not tagged'}</div></div><button class="ib ${GEO.sel===h.id?'':'o'}" style="width:auto;padding:0 10px;${GEO.sel===h.id?'background:var(--forest);color:#fff':''}" onclick="selGeo('${h.id}')">${h.lat?'Retag':'Tag'}</button></div>`).join('')||'<div class="sub">No households yet. Add some in Forms.</div>';
 }
-function selGeo(id){GEO.sel=id;GEO.pending=null;const h=HOUSEHOLDS.find(x=>x.id===id);$('g-info').textContent='Selected: '+h.head+' — tap the map to place the pin.';renderGeoList();renderGeo()}
+function selGeo(id){GEO.sel=id;GEO.pending=null;const h=HOUSEHOLDS.find(x=>x.id===id);$('g-info').textContent='Selected: '+h.head+(LIVE.id!==null?' — tap “Tag at my location” or tap the map.':' — start live location or tap the map to place the pin.');renderGeoList();renderGeo()}
 function renderGeo(){
  const m=getMap('geo-map',15);if(!m)return;
- if(!m.map._b){m.map._b=1;m.map.on('click',e=>setPending(e.latlng.lat,e.latlng.lng))}
+ if(!m.map._b){m.map._b=1;m.map.on('click',e=>setPending(e.latlng.lat,e.latlng.lng,'Map pin'));m.map.on('dragstart',()=>{LIVE.follow=false})}
  m.layer.clearLayers();const pts=[];
  myHH().filter(h=>h.lat).forEach(h=>{L.circleMarker([h.lat,h.lng],{radius:7,color:'#fff',weight:2,fillColor:SC[h.status],fillOpacity:1}).bindTooltip(esc(h.head)).addTo(m.layer);pts.push([h.lat,h.lng])});
  if(GEO.pending)L.marker(GEO.pending).addTo(m.layer);
- if(!GEO.fit){GEO.fit=true;const b=BARANGAYS.find(x=>x.name===cur.barangay);if(pts.length)m.map.fitBounds(pts,{padding:[50,50],maxZoom:16});else if(b)m.map.setView([b.lat,b.lng],15)}
+ if(LIVE.pos){ // live position: pulsing blue dot + accuracy circle
+  L.circle(LIVE.pos,{radius:LIVE.acc||10,color:'#1a73e8',weight:1,fillColor:'#1a73e8',fillOpacity:.12,interactive:false}).addTo(m.layer);
+  L.marker(LIVE.pos,{icon:L.divIcon({className:'',html:'<div class="live-dot"></div>',iconSize:[18,18],iconAnchor:[9,9]}),zIndexOffset:1000}).bindTooltip('You are here').addTo(m.layer);
+ }
+ if(!GEO.fit&&!LIVE.pos){GEO.fit=true;const b=BARANGAYS.find(x=>x.name===cur.barangay);if(pts.length)m.map.fitBounds(pts,{padding:[50,50],maxZoom:16});else if(b)m.map.setView([b.lat,b.lng],15)}
 }
-function setPending(la,lo){if(!GEO.sel){toast('Select a household first.');return}GEO.pending=[la,lo];$('g-info').textContent=`Pin: ${la.toFixed(5)}, ${lo.toFixed(5)} — press Save geotag.`;renderGeo()}
-function useGPS(){
- if(!GEO.sel){toast('Select a household first.');return}
+function setPending(la,lo,src){if(!GEO.sel){toast('Select a household first.');return}GEO.pending=[la,lo];GEO.src=src||'Map pin';$('g-info').textContent=`Pin: ${la.toFixed(5)}, ${lo.toFixed(5)} (${GEO.src}) — press Save geotag.`;renderGeo()}
+function setLiveUI(){
+ const b=$('live-btn');if(!b)return;const on=LIVE.id!==null;
+ b.textContent=on?'⏹ Stop live location':'📡 Start live location';b.classList.toggle('stop',on);b.classList.toggle('live',!on);
+ if(!on)$('live-st').textContent='⚪ Live location is off.';
+}
+function toggleLive(){LIVE.id!==null?stopLive():startLive()}
+function startLive(){
  if(!navigator.geolocation){toast('GPS is not available on this device.');return}
- navigator.geolocation.getCurrentPosition(p=>{setPending(p.coords.latitude,p.coords.longitude);const m=MAPS['geo-map'];if(m)m.map.setView(GEO.pending,17)},()=>toast('Could not get your location. Tap the map instead.'),{enableHighAccuracy:true,timeout:10000});
+ LIVE.follow=true;LIVE.pos=null;
+ $('live-st').textContent='🟡 Waiting for GPS signal…';
+ LIVE.id=navigator.geolocation.watchPosition(p=>{
+  const first=!LIVE.pos;LIVE.pos=[p.coords.latitude,p.coords.longitude];LIVE.acc=p.coords.accuracy;LIVE.t=ts();
+  const a=Math.round(LIVE.acc);$('live-st').innerHTML=`🟢 <b>Live</b> · ${LIVE.pos[0].toFixed(5)}, ${LIVE.pos[1].toFixed(5)} · accuracy ±${a} m${a>50?' <span style="color:var(--high)">(weak — move to open sky)</span>':''}`;
+  renderGeo();const m=MAPS['geo-map'];if(m&&(first||LIVE.follow))m.map.setView(LIVE.pos,first?17:m.map.getZoom());
+  if(first)logEvent('Activity','Started live location tracking');
+ },err=>{
+  const msg=err.code===1?'Location permission was denied. Allow location access in your browser settings.':err.code===2?'Location unavailable. Check that GPS is on.':'Location request timed out. Trying again…';
+  toast(msg);if(err.code===1)stopLive(true);else $('live-st').textContent='🟠 '+msg;
+ },{enableHighAccuracy:true,maximumAge:0,timeout:20000});
+ setLiveUI();
+}
+function stopLive(silent){
+ if(LIVE.id!==null){navigator.geolocation.clearWatch(LIVE.id);LIVE.id=null}
+ LIVE.pos=null;LIVE.acc=null;setLiveUI();
+ if(!silent&&MAPS['geo-map'])renderGeo();
+}
+function tagHere(){
+ if(!GEO.sel){toast('Select a household first.');return}
+ if(!LIVE.pos){toast('Start live location first and wait for a GPS fix.');return}
+ LIVE.follow=true;setPending(LIVE.pos[0],LIVE.pos[1],`Live GPS ±${Math.round(LIVE.acc)} m`);
+ const m=MAPS['geo-map'];if(m)m.map.setView(LIVE.pos,17);
+ if(LIVE.acc>50)toast('GPS accuracy is low (±'+Math.round(LIVE.acc)+' m). Consider waiting for a better fix.');
 }
 function saveGeo(){
  if(!GEO.sel||!GEO.pending){toast('Select a household and place a pin first.');return}
- const h=HOUSEHOLDS.find(x=>x.id===GEO.sel);h.lat=GEO.pending[0];h.lng=GEO.pending[1];
- logEvent('Activity','Geotagged household '+h.id);GEO.pending=null;$('g-info').textContent='Geotag saved for '+h.head+'.';renderGeoList();renderGeo();toast('Geotag saved.','ok');
+ const h=HOUSEHOLDS.find(x=>x.id===GEO.sel);h.lat=GEO.pending[0];h.lng=GEO.pending[1];h.geoSrc=GEO.src;h.geoAt=ts();
+ logEvent('Activity',`Geotagged household ${h.id} (${GEO.src})`);GEO.pending=null;$('g-info').textContent='Geotag saved for '+h.head+'.';renderGeoList();renderGeo();toast('Geotag saved.','ok');
 }
 addEventListener('resize',()=>Object.values(MAPS).forEach(m=>m.map.invalidateSize()));
 </script></body></html>
