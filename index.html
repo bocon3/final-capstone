@@ -195,20 +195,11 @@ td{padding:10px 14px;border-bottom:1px solid var(--s2);vertical-align:middle}tr:
 <button class="btn" onclick="createAcc()">💾 Save</button> <button class="btn o" onclick="toggleAcc()">Cancel</button></div>
 <div class="tw"><table><thead><tr><th>Username</th><th>Role</th><th>Barangay</th><th>Status</th><th>Actions</th></tr></thead><tbody id="us-body"></tbody></table></div></div></div>
 
-<!-- STAFF: FORMS -->
+<!-- STAFF: FORMS (the survey pop-up form is created by combaty-update.js) -->
 <div class="view" id="view-forms">
 <div class="tb"><input class="in" id="f-q" placeholder="Search household head or ID..." oninput="renderForms()">
 <button class="btn" onclick="openHH()">➕ Add household</button><button class="btn o" onclick="submitDrafts()">📤 Submit to Barangay</button></div>
-<div class="box"><div class="form" id="hh-f"><input type="hidden" id="h-id"><div class="fg">
-<div><label class="lab">Household head</label><input class="in" id="h-head"></div>
-<div><label class="lab">Address / Purok</label><input class="in" id="h-addr"></div>
-<div><label class="lab">Household members</label><input class="in" type="number" min="1" id="h-mem"></div>
-<div><label class="lab">Monthly income (₱)</label><input class="in" type="number" min="0" id="h-inc"></div>
-<div><label class="lab">Occupation</label><input class="in" id="h-occ"></div>
-<div><label class="lab">Education attainment</label><select class="sel" id="h-edu"><option>No schooling</option><option>Elementary undergrad/grad</option><option>Secondary undergrad</option><option>Secondary graduate</option><option>Tertiary</option></select></div>
-<div><label class="lab">Housing condition</label><select class="sel" id="h-hou"><option>Poor</option><option>Fair</option><option>Good</option></select></div>
-<div><label class="lab">Access to services</label><select class="sel" id="h-srv"><option>Limited</option><option>Moderate</option><option>Full</option></select></div></div>
-<button class="btn" onclick="saveHH()">💾 Save household</button> <button class="btn o" onclick="tog('hh-f')">Cancel</button></div>
+<div class="box">
 <div class="tw"><table><thead><tr><th>Household</th><th>Members</th><th>Poverty status</th><th>Form status</th><th>Geotag</th><th>Actions</th></tr></thead><tbody id="f-body"></tbody></table></div></div></div>
 
 <!-- STAFF: GEOTAG (live location) -->
@@ -497,27 +488,14 @@ function createAcc(){
 function toggleAcct(u){const a=ACCOUNTS.find(x=>x.username===u);a.status=a.status==='Active'?'Suspended':'Active';logEvent('User',`${a.status==='Active'?'Activated':'Suspended'} account ${u}`);renderUsers()}
 function delAcct(u){if(!confirm('Delete account '+u+'?'))return;ACCOUNTS=ACCOUNTS.filter(a=>a.username!==u);logEvent('User','Deleted account '+u);renderUsers()}
 
-// ── STAFF: FORMS (add / modify / remove / view household info) ──
+// ── STAFF: FORMS (view / remove here; add & modify use the survey pop-up from combaty-update.js) ──
 const editable=h=>h.status==='Draft'||h.status==='Returned';
 function renderForms(){
  const q=$('f-q').value.toLowerCase();
  $('f-body').innerHTML=myHH().filter(h=>(h.head+h.id).toLowerCase().includes(q)).map(h=>`<tr><td><b>${esc(h.head)}</b><div class="sub">${h.id} · ${esc(h.address)}</div></td><td data-l="Members">${h.members}</td><td data-l="Poverty">${hhPov(h)}</td><td data-l="Form">${spill(h.status)}</td><td data-l="Geotag">${h.lat?'📍 Tagged':'<span class="sub">—</span>'}</td>
  <td><button class="ib" onclick="viewHH('${h.id}')" title="View" aria-label="View">👁</button><button class="ib" onclick="openHH('${h.id}')" title="Modify" aria-label="Modify" ${editable(h)?'':'disabled'}>✏️</button><button class="ib d" onclick="delHH('${h.id}')" title="Remove" aria-label="Remove" ${editable(h)?'':'disabled'}>🗑</button></td></tr>`).join('')||'<tr><td colspan="6" class="sub" style="text-align:center;padding:22px">No household records yet.</td></tr>';
 }
-function openHH(id){
- const h=id?HOUSEHOLDS.find(x=>x.id===id):null;
- $('h-id').value=id||'';
- [['head','head'],['addr','address'],['mem','members'],['inc','income'],['occ','occupation'],['edu','education'],['hou','housing'],['srv','services']].forEach(([f,k])=>{$('h-'+f).value=h?h[k]:(f==='edu'?'Elementary undergrad/grad':f==='hou'?'Poor':f==='srv'?'Limited':'')});
- $('hh-f').style.display='block';$('hh-f').scrollIntoView({block:'nearest'});
-}
-function saveHH(){
- const v=f=>$('h-'+f).value.trim(),id=$('h-id').value;
- const d={head:v('head'),address:v('addr'),members:parseInt(v('mem'),10),income:parseFloat(v('inc')),occupation:v('occ'),education:$('h-edu').value,housing:$('h-hou').value,services:$('h-srv').value};
- if(!d.head||!d.address||!(d.members>0)||isNaN(d.income)||d.income<0){toast('Name, address, members and income are required.');return}
- if(id){Object.assign(HOUSEHOLDS.find(x=>x.id===id),d);logEvent('Activity','Modified household '+id)}
- else{const n='HH-'+String(HOUSEHOLDS.length+1).padStart(4,'0');HOUSEHOLDS.push({id:n,barangay:cur.barangay,status:'Draft',lat:null,lng:null,remarks:'',by:cur.username,date:ts().slice(0,10),...d});logEvent('Activity','Added household '+n)}
- $('hh-f').style.display='none';renderForms();toast('Household saved.','ok');
-}
+function openHH(){toast('Survey form is not loaded. Check that combaty-update.js is next to index.html.')} // replaced by combaty-update.js
 function delHH(id){if(!confirm('Remove household '+id+'?'))return;HOUSEHOLDS=HOUSEHOLDS.filter(h=>h.id!==id);logEvent('Activity','Removed household '+id);renderForms();toast('Household removed.','ok')}
 function viewHH(id){
  const h=HOUSEHOLDS.find(x=>x.id===id),r=(k,v)=>`<dt>${k}</dt><dd>${esc(v)}</dd>`;
@@ -661,4 +639,8 @@ function saveGeo(){
  logEvent('Activity',`Geotagged household ${h.id} (${GEO.src})`);GEO.pending=null;$('g-info').textContent='Geotag saved for '+h.head+'.';renderGeoList();renderGeo();toast('Geotag saved.','ok');
 }
 addEventListener('resize',()=>Object.values(MAPS).forEach(m=>m.map.invalidateSize()));
-</script></body></html>
+</script>
+
+<!-- Survey form, reports to Admin, login extras. Must stay AFTER the main script. -->
+<script src="serve.js"></script>
+</body></html>
