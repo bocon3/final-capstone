@@ -1,6 +1,7 @@
-/* ComBaTy FINAL — replaces the old combaty-update.js. Keep it next to index.html and load it
-   right before </body> (after the main script):  <script src="combaty-update.js"></script>
-   The "Add household" button now opens ONE scrolling form that follows ComBaTy_Survey.docx (Parts I–X). */
+/* ComBaTy FINAL — Keep it next to index.html and load it
+   right before </body> (after the main script).
+   The "Add household" button opens ONE scrolling form that follows ComBaTy_Survey.docx (Parts I–X),
+   including a House Geotag section that fills in the Geotagging page automatically. */
 (function(){
 const $=id=>document.getElementById(id),OT='Other',YN=['Yes','No'];
 {const o=$('hh-f');if(o)o.remove()}
@@ -55,7 +56,7 @@ const FORM=[
  Q('q34',34,'c','What kind of assistance would most help your household improve its current situation?',['Employment opportunity','Livelihood assistance','Financial assistance','Educational assistance','Food assistance','Health/medical assistance','Housing assistance','Skills training',OT])]]
 ];
 const ALLQ={consent:{t:'c'}};FORM.forEach(p=>p[1].forEach(q=>ALLQ[q.k]=q));
-const W={id:'',code:'',sv:{}};
+const W={id:'',code:'',sv:{},geo:null,tok:0};
 
 // ── Form builder ──
 function qHTML(q){
@@ -87,11 +88,16 @@ function build(){
  <div class="qq"><div class="ql"><b>3.</b> Household Code: <b>${W.code}</b> <span class="sub">(auto-assigned; do not write the name here)</span></div></div>
  ${numQ('members',4,'Number of members in the household:','persons')}${numQ('children',5,'Number of children below 18 years old:','children')}${numQ('seniors',6,'Number of senior citizens (60 years old and above):','persons')}
  <div class="qq"><div class="ql"><b>Household head name</b> <span class="sub">(staff records only — not part of the paper form)</span></div><input class="in" data-k="head" value="${esc(s.head)}"></div>
+ <div class="ph">HOUSE GEOTAG</div>
+ <div class="note">Tag the house while filling out this form. The location is saved with the household and appears automatically under <b>Geotagging</b>.</div>
+ <div id="fm-st" class="sub" style="margin-bottom:8px"></div>
+ <button type="button" class="btn live" onclick="wzLocate()">📡 Use my current location</button><button type="button" class="btn o" onclick="wzClearGeo()">Clear</button>
+ <div id="fm-map" style="height:260px;border-radius:10px;margin-top:8px;isolation:isolate"></div>
  <div class="ph">PART II. HOUSEHOLD DEMOGRAPHIC INFORMATION</div>
  <div class="sub" style="margin:6px 0">Provide the following information for each household member (rows follow the number of members in Part I).</div><div id="mem-box">${memHTML(s.mem||[])}</div>
  ${FORM.map(p=>`<div class="ph">${p[0]}</div>${p[1].map(qHTML).join('')}`).join('')}
  <div class="wzf"><button class="btn o" onclick="wzCancel()">Cancel</button><button class="btn o" onclick="wzDraft()">💾 Save draft</button><span style="flex:1"></span><button class="btn" onclick="wzSubmit()">✔ Submit survey</button></div>`;
- $('wz').classList.add('on');$('wz-c').scrollTop=0;
+ $('wz').classList.add('on');$('wz-c').scrollTop=0;initFormMap();
 }
 const wz=document.createElement('div');wz.className='modal';wz.id='wz';wz.innerHTML='<div class="mc" id="wz-c" style="max-width:820px"></div>';document.body.appendChild(wz);
 wz.addEventListener('input',e=>{if(e.target.dataset.k==='members'){W.sv.members=e.target.value;W.sv.mem=grabMem();$('mem-box').innerHTML=memHTML(W.sv.mem)}});
@@ -114,6 +120,7 @@ function invalid(s,draft){
 }
 function save(status){
  const s=collect(),err=invalid(s,status==='Draft');if(err){toast(err);return}
+ if(status==='Submitted'&&!W.geo){toast('Please tag the house location (House Geotag section) before submitting.');return}
  const n=Math.max(1,parseInt(s.members)||1),oth=k=>s[k]===OT?(s[k+'_o']||OT):(s[k]||'');
  s.mem=s.mem.slice(0,n);
  const sc=[s.q22==='Yes',['Piped water','Water refilling station'].includes(s.q21),s.q23==='Water-sealed toilet',s.q26==='Yes'].filter(Boolean).length;
@@ -121,20 +128,60 @@ function save(status){
  let h=W.id&&HOUSEHOLDS.find(x=>x.id===W.id);
  if(h)Object.assign(h,d);else{h={id:W.code,barangay:cur.barangay,lat:null,lng:null,remarks:'',by:cur.username,date:ts().slice(0,10),...d};HOUSEHOLDS.push(h)}
  h.status=status;
+ if(W.geo){h.lat=W.geo.lat;h.lng=W.geo.lng;h.geoSrc=W.geo.src;h.geoAt=W.geo.at;logEvent('Activity',`Geotagged household ${h.id} (${W.geo.src}) from survey form`)}
  if(status==='Submitted'){h.by=cur.username;h.date=ts().slice(0,10);h.remarks='';NOTIFS.unshift({brgy:cur.barangay,text:`Brgy Staff (${cur.username}) submitted household form ${h.id} (${h.head}) for review.`,time:ts(),read:false})}
  logEvent('Activity',(status==='Submitted'?'Submitted':'Saved draft of')+' household survey '+h.id);
  wz.classList.remove('on');renderForms();toast(status==='Submitted'?'Survey submitted to Barangay.':'Draft saved.','ok');
 }
+
+// ── Geotag inside the survey form ──
+const FM={map:null,mk:null};
+function setGeoStatus(msg){
+ const e=$('fm-st');if(!e)return;const g=W.geo;
+ e.innerHTML=msg||(g?`🟢 Tagged: <b>${g.lat.toFixed(5)}, ${g.lng.toFixed(5)}</b> (${esc(g.src)}) — saved with this form. Drag the pin or tap the map to adjust.`:'⚪ Not tagged yet. Tap “Use my current location” or tap the map to place the pin.');
+}
+function putMarker(){
+ const g=W.geo;if(!FM.map||!g)return;
+ if(FM.mk)FM.mk.setLatLng([g.lat,g.lng]);
+ else{FM.mk=L.marker([g.lat,g.lng],{icon:pinIcon('#7b1fa2',38),draggable:true}).addTo(FM.map);
+  FM.mk.on('dragend',()=>{const p=FM.mk.getLatLng();setFormGeo(p.lat,p.lng,'Map pin',false)})}
+}
+function setFormGeo(la,lo,src,pan){
+ W.geo={lat:la,lng:lo,src,at:ts()};putMarker();
+ if(FM.map&&pan)FM.map.setView([la,lo],18);
+ setGeoStatus();
+}
+function initFormMap(){
+ if(FM.map){FM.map.remove();FM.map=null;FM.mk=null}
+ if(!$('fm-map')||typeof L==='undefined')return;
+ const b=BARANGAYS.find(x=>x.name===cur.barangay)||{lat:8.3659,lng:124.8637},g=W.geo;
+ FM.map=L.map('fm-map',{center:g?[g.lat,g.lng]:[b.lat,b.lng],zoom:g?18:15});
+ L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles &copy; Esri'}).addTo(FM.map);
+ FM.map.on('click',e=>setFormGeo(e.latlng.lat,e.latlng.lng,'Map pin',false));
+ putMarker();setGeoStatus();
+ setTimeout(()=>FM.map&&FM.map.invalidateSize(),150);
+}
+window.wzLocate=function(auto){
+ if(!navigator.geolocation){setGeoStatus('🟠 GPS is not available on this device. Tap the map to place the pin.');return}
+ const t=W.tok;setGeoStatus('🟡 Getting GPS location…');
+ navigator.geolocation.getCurrentPosition(p=>{if(t!==W.tok)return;setFormGeo(p.coords.latitude,p.coords.longitude,`Live GPS ±${Math.round(p.coords.accuracy)} m`,true)},
+ err=>{if(t!==W.tok)return;const m=err.code===1?'Location permission denied. Tap the map to place the pin.':'Could not get a GPS fix. Tap the map to place the pin.';setGeoStatus('🟠 '+m);if(!auto)toast(m)},
+ {enableHighAccuracy:true,timeout:20000,maximumAge:0});
+};
+window.wzClearGeo=function(){W.geo=null;if(FM.mk&&FM.map){FM.map.removeLayer(FM.mk);FM.mk=null}setGeoStatus()};
+
 window.openHH=function(id){
  const h=id?HOUSEHOLDS.find(x=>x.id===id):null;
- W.id=id||'';
+ W.id=id||'';W.tok=(W.tok||0)+1;
  W.sv=h?(h.survey?JSON.parse(JSON.stringify(h.survey)):{head:h.head,purok:h.address,members:h.members,consent:['agree']}):{};
+ W.geo=h&&h.lat!=null?{lat:h.lat,lng:h.lng,src:h.geoSrc||'Saved geotag',at:h.geoAt||''}:null;
  W.code=id||'HH-'+String(Math.max(0,...HOUSEHOLDS.map(x=>parseInt(x.id.slice(3))||0))+1).padStart(4,'0');
  build();
+ if(!W.geo)wzLocate(true); // new form: automatically ask for the current location
 };
 window.wzSubmit=()=>save('Submitted');
 window.wzDraft=()=>save('Draft');
-window.wzCancel=function(){if(confirm('Close the form? Unsaved answers will be lost.'))wz.classList.remove('on')};
+window.wzCancel=function(){if(confirm('Close the form? Unsaved answers will be lost.')){W.tok++;wz.classList.remove('on')}};
 
 // ── View household: also show the full survey answers ──
 const _vh=window.viewHH;
@@ -151,6 +198,9 @@ window.viewHH=function(id){
 
 // ── Barangay → Admin report submission ──
 window.REPORTS=[];
+// Sample data: every barangay already has a Received report, so none shows as Missing (replace with real reports)
+BARANGAYS.forEach((b,i)=>{const hs=HOUSEHOLDS.filter(h=>h.barangay===b.name&&h.status!=='Draft'),n=st=>hs.filter(h=>h.status===st).length;
+ REPORTS.unshift({id:'RP-'+String(i+1).padStart(3,'0'),brgy:b.name,by:b.name[0]+'-barangay',at:'2026-11-10 09:00',total:hs.length,approved:n('Approved'),review:n('Under Review'),returned:n('Returned'),pending:n('Submitted'),trend:trendSummary(b.name),status:'Received',rows:hs.map(h=>({id:h.id,head:h.head,status:h.status,by:h.by,remarks:h.remarks||''}))})});
 window.submitReport=function(){
  const hs=myHH().filter(h=>h.status!=='Draft');
  if(!hs.length){toast('There are no submitted forms to report yet.');return}
@@ -172,10 +222,26 @@ sb.className='btn live';sb.textContent='📨 Submit report to Admin';sb.onclick=
 NAV['brgy-submissions']=['📥','Barangay Reports','Reports submitted by barangays'];
 ROLE_VIEWS.Administrator.splice(4,0,'brgy-submissions');
 const av=document.createElement('div');av.className='view';av.id='view-brgy-submissions';
-av.innerHTML='<div class="box"><div class="bh"><div><h3>Reports from Barangays</h3><small>Action taken reports submitted by Barangay officials</small></div></div><div class="tw"><table><thead><tr><th>Report</th><th>Barangay</th><th>Submitted by</th><th>Forms</th><th>Status</th><th>Actions</th></tr></thead><tbody id="sub-body"></tbody></table></div></div>';
+av.innerHTML='<div class="stats" id="trk-stats" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr))"></div>'
++'<div class="box"><div class="bh"><div><h3>Barangay Submission Tracker</h3><small>Every tracked barangay and its latest report, so no barangay is missed</small></div></div><div class="tw"><table><thead><tr><th>Barangay</th><th>Forms on file</th><th>Reports sent</th><th>Latest report</th><th>Status</th></tr></thead><tbody id="trk-body"></tbody></table></div></div>'
++'<div class="box"><div class="bh"><div><h3>Reports from Barangays</h3><small>Action taken reports submitted by Barangay officials</small></div></div>'
++'<div class="tb" style="padding:12px 18px 0;margin-bottom:10px"><input class="in" id="sb-q" placeholder="Search report, barangay or submitter..." oninput="renderSubs()"><select class="sel" id="sb-b" onchange="renderSubs()"></select><select class="sel" id="sb-s" onchange="renderSubs()"><option value="">All statuses</option><option>Submitted</option><option>Received</option></select><button class="btn o" onclick="$(\'sb-q\').value=\'\';$(\'sb-b\').value=\'\';$(\'sb-s\').value=\'\';renderSubs()">Clear</button></div>'
++'<div class="sub" id="sb-count" style="padding:0 18px 8px"></div>'
++'<div class="tw"><table><thead><tr><th>Report</th><th>Barangay</th><th>Submitted by</th><th>Forms</th><th>Status</th><th>Actions</th></tr></thead><tbody id="sub-body"></tbody></table></div></div>';
 document.querySelector('main.main').appendChild(av);
 window.renderSubs=function(){
- $('sub-body').innerHTML=REPORTS.map(r=>`<tr><td><b>${r.id}</b><div class="sub">${r.at}</div></td><td>${esc(r.brgy)}</td><td>${esc(r.by)}</td><td>${r.total}<div class="sub">${r.approved} approved · ${r.returned} returned</div></td><td><span class="pill ${r.status==='Received'?'vlow':'low'}">${r.status}</span></td><td><button class="ib" onclick="viewReport('${r.id}')" aria-label="View">👁</button>${r.status==='Submitted'?`<button class="ib" onclick="receiveReport('${r.id}')" title="Mark as received" aria-label="Mark received">✔</button>`:''}</td></tr>`).join('')||'<tr><td colspan="6" class="sub" style="text-align:center;padding:22px">No reports submitted yet.</td></tr>';
+ // Tracker: one row per tracked barangay, so a barangay that has not reported is clearly flagged as MISSING
+ const trk=BARANGAYS.map(b=>{const rs=REPORTS.filter(r=>r.brgy===b.name),last=rs[0]||null,forms=HOUSEHOLDS.filter(h=>h.barangay===b.name&&h.status!=='Draft').length;
+  const st=!last?'Missing':rs.some(r=>r.status==='Submitted')?'Awaiting':'Received';return{b:b.name,forms,n:rs.length,last,st}});
+ const cnt=k=>trk.filter(t=>t.st===k).length;
+ $('trk-stats').innerHTML=`<div class="sc vlow"><small>Received</small><b>${cnt('Received')}</b><span>of ${trk.length} barangays</span></div><div class="sc low" style="background:linear-gradient(135deg,var(--low),#9c7c1c)"><small>Awaiting your review</small><b>${cnt('Awaiting')}</b><span>Submitted, not yet received</span></div><div class="sc high"><small>Missing report</small><b>${cnt('Missing')}</b><span>No report submitted yet</span></div>`;
+ const PK={Missing:'high',Awaiting:'low',Received:'vlow'},PT={Missing:'⚠ Missing',Awaiting:'Awaiting review',Received:'Received'};
+ $('trk-body').innerHTML=trk.map(t=>`<tr><td><b>${esc(t.b)}</b></td><td>${t.forms}</td><td>${t.n}</td><td>${t.last?`${t.last.id}<div class="sub">${t.last.at} · ${esc(t.last.by)}</div>`:'<span class="sub">—</span>'}</td><td><span class="pill ${PK[t.st]}">${PT[t.st]}</span></td></tr>`).join('');
+ const bs=$('sb-b'),prev=bs.value;bs.innerHTML='<option value="">All barangays</option>'+BARANGAYS.map(b=>`<option>${esc(b.name)}</option>`).join('');if(BARANGAYS.some(b=>b.name===prev))bs.value=prev;
+ const q=$('sb-q').value.trim().toLowerCase(),fb=bs.value,fs=$('sb-s').value;
+ const rows=REPORTS.filter(r=>(!fb||r.brgy===fb)&&(!fs||r.status===fs)&&(!q||(r.id+' '+r.brgy+' '+r.by).toLowerCase().includes(q)));
+ $('sb-count').textContent=`Showing ${rows.length} of ${REPORTS.length} reports`;
+ $('sub-body').innerHTML=rows.map(r=>`<tr><td><b>${r.id}</b><div class="sub">${r.at}</div></td><td>${esc(r.brgy)}</td><td>${esc(r.by)}</td><td>${r.total}<div class="sub">${r.approved} approved · ${r.returned} returned</div></td><td><span class="pill ${r.status==='Received'?'vlow':'low'}">${r.status}</span></td><td><button class="ib" onclick="viewReport('${r.id}')" aria-label="View">👁</button>${r.status==='Submitted'?`<button class="ib" onclick="receiveReport('${r.id}')" title="Mark as received" aria-label="Mark received">✔</button>`:''}</td></tr>`).join('')||'<tr><td colspan="6" class="sub" style="text-align:center;padding:22px">No reports match.</td></tr>';
 };
 window.viewReport=function(id){
  const r=REPORTS.find(x=>x.id===id);
@@ -202,15 +268,11 @@ window.showView=function(n){
  setTimeout(refreshMaps,60);
 };
 
-// ── Login: show/hide password + saved quick-login accounts ──
+// ── Login: show/hide password ──
 const lp=$('lp'),w=document.createElement('div');
 w.style.position='relative';lp.parentNode.insertBefore(w,lp);w.appendChild(lp);lp.style.paddingRight='46px';
 const eye=document.createElement('button');eye.type='button';eye.textContent='👁';eye.setAttribute('aria-label','Show password');
 eye.style.cssText='position:absolute;right:6px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;font-size:17px;padding:4px 8px';
 eye.onclick=()=>{const s=lp.type==='password';lp.type=s?'text':'password';eye.textContent=s?'🙈':'👁';eye.setAttribute('aria-label',s?'Hide password':'Show password')};
 w.appendChild(eye);
-const qa=document.createElement('div');qa.style.cssText='margin-top:16px;padding-top:14px;border-top:1px solid var(--border)';
-qa.innerHTML='<div class="lab" style="text-align:center">Saved accounts · tap to log in</div>';
-ACCOUNTS.slice(0,3).forEach(a=>{const b=document.createElement('button');b.type='button';b.className='btn o';b.style.cssText='width:100%;margin:4px 0;text-align:left';b.innerHTML=`<b>${a.role}</b> <span class="sub">· ${esc(a.username)}</span>`;b.onclick=()=>{$('lu').value=a.username;lp.value=a.password;login()};qa.appendChild(b)});
-document.querySelector('#login .lbody').insertBefore(qa,document.querySelector('#login .lbody > p.sub'));
 })();
